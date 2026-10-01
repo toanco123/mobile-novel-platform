@@ -9,7 +9,7 @@ describe('listMarker', () => {
 
   it('các kiểu chấm', () => {
     expect(listMarker('circle', false, 3)).toBe('◦')
-    expect(listMarker('square', false, 0)).toBe('▪')
+    expect(listMarker('square', false, 0)).toBe('▪\uFE0E')
   })
 
   it('chữ cái và số La Mã', () => {

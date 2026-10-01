@@ -31,28 +31,43 @@ Máy có Xcode và CocoaPods, chưa có Android SDK: kiểm trên iOS Simulator.
 
 ## Bấm thử bằng AppleScript
 
-Simulator không nhận lệnh chạm từ dòng lệnh; bấm bằng AppleScript vào cửa sổ Simulator:
+Simulator không nhận lệnh chạm từ dòng lệnh. `click at` của AppleScript báo thành công nhưng app thường **không nhận**; dùng sự kiện chuột CGEvent (một chương trình Swift nhỏ, biên dịch một lần vào scratchpad):
 
-```bash
-osascript -e 'tell application "System Events" to tell process "Simulator" to get {position, size} of window 1'
-# → x0, y0, w, h
+```swift
+// <scratchpad>/click.swift — click x y; drag.swift tương tự: leftMouseDown ở (x, y1), ~30 leftMouseDragged tới (x, y2) cách nhau 16ms, chờ 0,3 giây rồi leftMouseUp (vuốt để cuộn)
+import Foundation
+import CoreGraphics
+let a = CommandLine.arguments
+let p = CGPoint(x: Double(a[1])!, y: Double(a[2])!)
+func post(_ t: CGEventType) {
+  let e = CGEvent(mouseEventSource: nil, mouseType: t, mouseCursorPosition: p, mouseButton: .left)
+  e?.setIntegerValueField(.mouseEventClickState, value: 1)
+  e?.post(tap: .cghidEventTap)
+}
+post(.mouseMoved); usleep(150000)
+post(.leftMouseDown); usleep(100000)
+post(.leftMouseUp)
 ```
 
-Đổi tọa độ trên ảnh chụp (`xi`, `yi` trên ảnh rộng `W`, cao `H`, tính theo cùng một kích thước ảnh):
-
-- `x = x0 + w * xi / W`
-- `y = y0 + 28 + (h - 28) * yi / H` (28 là thanh tiêu đề cửa sổ)
+`swiftc -O click.swift -o click`. Đổi tọa độ theo **khung vùng màn hình** (`group 1` của cửa sổ, đúng bằng cỡ điểm của máy, vd 402×874 với iPhone 17 Pro), không theo cả cửa sổ (cửa sổ còn thanh công cụ cao 52 và viền máy, đổi theo cửa sổ thì bấm lệch lên cả dòng):
 
 ```bash
-osascript -e 'tell application "Simulator" to activate' -e 'delay 0.3' \
-  -e 'tell application "System Events" to click at {x, y}'
+osascript -e 'tell application "System Events" to tell process "Simulator" to get {position, size} of group 1 of window 1'
+# → gx, gy, gw, gh. Điểm (xi, yi) trên ảnh chụp rộng W, cao H:
+#   x = gx + gw * xi / W,  y = gy + gh * yi / H
+osascript -e 'tell application "Simulator" to activate'; sleep 0.5; <scratchpad>/click <x> <y>
 # Gõ chữ vào ô vừa bấm (simulator nối bàn phím máy Mac nên bàn phím ảo không hiện)
 osascript -e 'tell application "System Events" to keystroke "ten@example.com"'
 ```
 
-Không giấu lỗi của `osascript` (đừng `2>/dev/null`). Lỗi `osascript is not allowed assistive access (-25211)`: macOS chưa cho ứng dụng đang chạy Claude Code (Terminal / VS Code) quyền **Accessibility**; quyền này có thể mất giữa chừng. Người dùng tự bật ở System Settings → Privacy & Security → Accessibility. Chưa có quyền thì kiểm phần logic ở tầng API (vd gọi thẳng Supabase bằng `curl` với dữ liệu app tạo ra, lấy từ log) và báo rõ phần giao diện chưa bấm thử được.
+Không giấu lỗi của `osascript` (đừng `2>/dev/null`). Lỗi `osascript is not allowed assistive access (-25211)` (hoặc CGEvent không có tác dụng gì): macOS chưa cho ứng dụng đang chạy Claude Code (Terminal / VS Code) quyền **Accessibility**; quyền này có thể mất giữa chừng. Người dùng tự bật ở System Settings → Privacy & Security → Accessibility. Chưa có quyền thì kiểm phần logic ở tầng API (vd gọi thẳng Supabase bằng `curl` với dữ liệu app tạo ra, lấy từ log) và báo rõ phần giao diện chưa bấm thử được.
 
-Chụp lại để xác nhận. Cách đổi này chính xác với phần tử ở giữa màn hình (nút, tab); sát mép trái/phải dễ trượt vì viền máy. Bấm trượt hai lần thì thôi, mở màn hình bằng deep link hoặc báo người dùng tự bấm.
+- Bấm ngay sau khi vuốt: lần bấm đầu chỉ dừng trang đang trôi; chờ ~2 giây sau khi vuốt.
+- Nút bánh răng của Expo Go che góc trên phải (vd nút trên thanh công cụ): vuốt chính nút đó xuống chỗ khác.
+- Bấm mà không có gì xảy ra: thêm `console.log` tạm vào `onPress` để biết lần bấm có tới nút không trước khi kết luận app lỗi.
+- Bật lại Metro khi app đang mở: Fast Refresh có thể không đẩy bản sửa vào app nữa; mở lại app (mục trên) sau mỗi lần sửa nếu không thấy thay đổi.
+
+Chụp lại để xác nhận sau mỗi lần bấm. Bấm trượt hai lần thì thôi, mở màn hình bằng deep link hoặc báo người dùng tự bấm.
 
 ## Danh sách kiểm
 

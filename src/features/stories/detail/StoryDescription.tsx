@@ -24,14 +24,16 @@ export function StoryDescription({ story }: { story: Story }) {
           >
             {story.description}
           </Text>
-          {/* Bản ẩn không giới hạn dòng để đếm số dòng thật (bản gọn chỉ báo số dòng đã cắt) */}
-          <Text
-            aria-hidden
-            onTextLayout={(e) => setLineCount(e.nativeEvent.lines.length)}
-            className={cn(textClass, 'absolute inset-x-0 top-0 opacity-0')}
-          >
-            {story.description}
-          </Text>
+          {/* Bản ẩn không giới hạn dòng để đếm số dòng thật (bản gọn chỉ báo số dòng đã cắt).
+              pointerEvents none: bản ẩn dài hơn, nằm đè lên nút "Xem thêm" và sẽ nhận mất lần bấm */}
+          <View aria-hidden pointerEvents="none" className="absolute inset-x-0 top-0 opacity-0">
+            <Text
+              onTextLayout={(e) => setLineCount(e.nativeEvent.lines.length)}
+              className={textClass}
+            >
+              {story.description}
+            </Text>
+          </View>
         </View>
       ) : null}
       {(overflowing || expanded) && (

@@ -1,6 +1,7 @@
 import type { ListStyle } from '@/features/chapters/richText'
 
-const BULLETS = { disc: '•', circle: '◦', square: '▪' } as const
+// \uFE0E: iOS vẽ ▪ thành emoji ô vuông đen nếu không ép kiểu chữ thường
+const BULLETS = { disc: '•', circle: '◦', square: '▪\uFE0E' } as const
 
 const ROMAN: [number, string][] = [
   [1000, 'm'],

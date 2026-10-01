@@ -104,6 +104,7 @@ function StoryDetail({ story }: { story: Story }) {
         className="flex-1 bg-background"
         contentContainerClassName="pb-12"
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />
         }

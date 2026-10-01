@@ -6,8 +6,8 @@ Bước 2 của `plan-app-di-dong.md`, chia nhỏ theo yêu cầu của người
 | Phần | Nội dung | Trạng thái |
 |---|---|---|
 | **2a** | Trang chủ | ✅ (01/10/2026) |
-| **2b** | Chi tiết truyện: thông tin, mục lục, theo dõi, đọc tiếp | đã viết code, còn kiểm trên máy ảo |
-| **2c** | Trang đọc từng chương: nội dung, cài đặt đọc, chương trước/sau, lịch sử và lượt đọc | đã viết code, còn kiểm trên máy ảo |
+| **2b** | Chi tiết truyện: thông tin, mục lục, theo dõi, đọc tiếp | ✅ (01/10/2026) |
+| **2c** | Trang đọc từng chương: nội dung, cài đặt đọc, chương trước/sau, lịch sử và lượt đọc | ✅ (01/10/2026) |
 
 Ngoài bước 2: cuộn liên tục, tự cuộn, nghe truyện (bước 5); bình luận, chấm điểm (bước 4); đọc offline (bước 3).
 
@@ -88,4 +88,5 @@ Như `ChapterReaderPage` của web ở chế độ **từng chương**, route `s
 **Tiến độ 2c (01/10/2026):**
 - Code xong: `src/app/story/[slug]/[chapter].tsx`; `features/reader/` (useReaderSettings, readerOptions, text, progress, listMarker, useReadingTracker, useAutoHideToolbar, navigation, components/: ChapterArticle, ChapterNav, ChapterEnd, ReaderToolbar, ReaderChapterIndex, ReaderSettingsPanel, ResumeNotice); `components/common/BottomPanel.tsx`; `useChapter`, `useRecordChapterView` trong `chapters/hooks.ts`; 4 theme phụ trong `global.css` + `extraThemes` (metro.config.js) + `--theme` (lệnh typecheck); font Be Vietnam Pro nghiêng cho phông không chân.
 - Đã kiểm: typecheck, lint (0 cảnh báo), 48 test (thêm test cho `progress.ts`, `listMarker.ts`, số chữ khớp `toLocaleString('vi-VN')`), đóng gói iOS bằng `expo export` (có đủ 4 theme và font mới).
-- **Còn kiểm trên máy ảo** (cả 2b): nội dung chương với mọi kiểu khối (đoạn, tiêu đề, danh sách, đậm/nghiêng/gạch), đổi màu nền / phông / cỡ chữ / giãn dòng, thanh công cụ tự ẩn và chạm chữ để hiện, thanh tiến độ, mở lại chỗ đọc dở (`?resume=`) + "Về đầu chương", mục lục (mở sẵn chương đang đọc, chọn khoảng, đi tới), chuyển chương bằng `router.replace`, lịch sử đọc lưu khi cuộn / rời chương / app vào nền, màn tai thỏ và màn nhỏ.
+- **Kiểm trên máy ảo (01/10/2026, cả 2b), iPhone 17 Pro, theme tối và sáng, dữ liệu mẫu nạp tạm:** chi tiết truyện (đầu trang, "Xem thêm"/"Thu gọn", Cũ nhất/Mới nhất, phân trang cuộn về đầu danh sách, lỗi ô "Đi tới", nhãn Đang đọc/Mới, Cùng tác giả/thể loại, truyện nháp, truyện chưa có chương, không tìm thấy truyện, khách bấm Theo dõi mở đăng nhập); trang đọc (mọi kiểu khối nội dung, thanh công cụ tự ẩn + chạm chữ để hiện, thanh tiến độ, `?resume=` + "Về đầu chương", cài đặt đọc áp ngay và nhớ sau khi mở lại app, Đặt lại, mục lục, chuyển chương, cuối chương, quay lại về thẳng trang truyện với "Đọc tiếp chương N" mới). Người dùng bảo bỏ kiểm màn nhỏ (iPhone 17e).
+- **Lỗi tìm thấy khi kiểm, đã sửa:** đổi màu nền làm trang đọc dựng lại từ đầu (chỉ bọc `ScopedTheme` khi có màu riêng làm đổi cấu trúc cây: nay luôn bọc); dấu ▪ bị iOS vẽ thành emoji (thêm `\uFE0E`); chương không tên vẫn chừa dòng tiêu đề trống; header lúc chờ/lỗi của trang đọc khác màu nền đọc; bàn phím không đóng khi vuốt trang truyện (`keyboardDismissMode`); bản chữ ẩn đếm dòng của "Xem thêm" có thể đè lên nút (`pointerEvents="none"`).

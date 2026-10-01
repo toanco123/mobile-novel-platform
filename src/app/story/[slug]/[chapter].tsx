@@ -30,6 +30,7 @@ import { useAutoHideToolbar } from '@/features/reader/useAutoHideToolbar'
 import { useReaderSettings } from '@/features/reader/useReaderSettings'
 import { MIN_RESUME, useReadingTracker } from '@/features/reader/useReadingTracker'
 import { useTheme } from '@/hooks/useTheme'
+import { useThemeColors } from '@/hooks/useThemeColors'
 import { links } from '@/lib/links'
 import type { ChapterContent } from '@/types/chapter'
 
@@ -53,7 +54,7 @@ export default function ChapterScreen() {
   }>()
   const number = parseChapterSegment(chapter)
   const tone = useReaderSettings((s) => s.tone)
-  const theme = toneTheme[tone]
+  const appTheme = useTheme((s) => s.theme)
 
   if (number === null) {
     return (
@@ -66,8 +67,9 @@ export default function ChapterScreen() {
   const reader = (
     <Reader key={`${slug}#${number}`} slug={slug} number={number} resume={Number(resume)} />
   )
-  // Màu nền đọc: theme phụ chỉ trong vùng đọc, mọi class token bên trong tự đổi màu
-  return theme ? <ScopedTheme theme={theme}>{reader}</ScopedTheme> : reader
+  // Màu nền đọc: theme phụ chỉ trong vùng đọc, mọi class token bên trong tự đổi màu. Luôn bọc (kể cả
+  // "Theo app") để đổi màu nền không đổi cấu trúc cây, nếu không trang đọc dựng lại từ đầu
+  return <ScopedTheme theme={toneTheme[tone] ?? appTheme}>{reader}</ScopedTheme>
 }
 
 function Reader({ slug, number, resume }: { slug: string; number: number; resume: number }) {
@@ -79,7 +81,7 @@ function Reader({ slug, number, resume }: { slug: string; number: number; resume
   if (isError) {
     return (
       <>
-        <Stack.Screen options={{ headerShown: true }} />
+        <PlainHeader />
         <PlaceholderScreen
           title="Không tải được chương này"
           description="Kiểm tra kết nối mạng rồi thử lại."
@@ -94,7 +96,7 @@ function Reader({ slug, number, resume }: { slug: string; number: number; resume
   if (!chapter) {
     return (
       <>
-        <Stack.Screen options={{ headerShown: true }} />
+        <PlainHeader />
         <PlaceholderScreen
           title="Không tìm thấy chương"
           description={`Không tìm thấy chương ${number}. Có thể chương đã bị ẩn hoặc chưa được đăng.`}
@@ -268,7 +270,7 @@ function ReaderView({ chapter, resume }: { chapter: ChapterContent; resume: numb
 function ReaderSkeleton() {
   return (
     <View aria-busy aria-label="Đang tải chương" className="flex-1 bg-background px-5 pt-8">
-      <Stack.Screen options={{ headerShown: true }} />
+      <PlainHeader />
       <Skeleton className="h-4 w-40 self-center" />
       <Skeleton className="mt-6 h-10 w-3/4 self-center" />
       <View className="mt-14 gap-3">
@@ -277,5 +279,19 @@ function ReaderSkeleton() {
         ))}
       </View>
     </View>
+  )
+}
+
+/** Header điều hướng (nút quay lại) cho lúc chờ / lỗi, cùng màu nền đọc với thân màn */
+function PlainHeader() {
+  const colors = useThemeColors()
+  return (
+    <Stack.Screen
+      options={{
+        headerShown: true,
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.foreground,
+      }}
+    />
   )
 }

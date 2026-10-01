@@ -61,12 +61,15 @@ export function ChapterArticle({ chapter, nav, onTap, onLayout }: Props) {
           <Text className="text-center text-sm text-rose-gold">{chapter.story.title}</Text>
         </Pressable>
         <Text className="mt-6 text-sm text-muted-foreground">Chương {chapter.number}</Text>
-        <Text
-          role="heading"
-          className="mt-1 text-center font-heading-bold text-[36px] leading-[40px]"
-        >
-          {chapter.title}
-        </Text>
+        {/* Chương không có tên: bỏ hẳn dòng tiêu đề (thẻ rỗng của web không chiếm chỗ) */}
+        {chapter.title ? (
+          <Text
+            role="heading"
+            className="mt-1 text-center font-heading-bold text-[36px] leading-[40px]"
+          >
+            {chapter.title}
+          </Text>
+        ) : null}
         <View className="mt-5 flex-row flex-wrap justify-center gap-x-5 gap-y-1">
           <Meta icon={<CalendarDays size={14} color={colors.mutedForeground} />}>
             {formatDate(chapter.publishedAt)}

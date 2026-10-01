@@ -21,7 +21,7 @@ Máy có Xcode và CocoaPods, chưa có Android SDK: kiểm trên iOS Simulator.
 ## Chụp và mở màn hình
 
 - Chụp: `xcrun simctl io booted screenshot <scratchpad>/<ten>.png`, rồi Read ảnh để xem.
-- Mở thẳng một màn hình: `xcrun simctl openurl booted "exp://<IP>:8081/--/<route>"`. `<IP>` lấy ở dòng `Opening exp://...` trong log; `<route>` theo `src/app/` (vd `account`, `story/<slug>`, `story/<slug>/chapter-3`).
+- Mở thẳng một màn hình: `xcrun simctl openurl booted "exp://<IP>:8081/--/<route>"`. `<IP>` lấy ở dòng `Opening exp://...` trong log, hoặc dùng `127.0.0.1` (simulator chạy trên chính máy này; `ipconfig getifaddr en0` có thể rỗng); `<route>` theo `src/app/` (vd `account`, `story/<slug>`, `story/<slug>/chapter-3`).
 - Mở lại app từ đầu: `xcrun simctl terminate booted host.exp.Exponent`, rồi `xcrun simctl openurl booted "exp://<IP>:8081"` và chờ ~10 giây.
 
 ## Lớp phủ của Expo Go
@@ -46,7 +46,11 @@ osascript -e 'tell application "System Events" to tell process "Simulator" to ge
 ```bash
 osascript -e 'tell application "Simulator" to activate' -e 'delay 0.3' \
   -e 'tell application "System Events" to click at {x, y}'
+# Gõ chữ vào ô vừa bấm (simulator nối bàn phím máy Mac nên bàn phím ảo không hiện)
+osascript -e 'tell application "System Events" to keystroke "ten@example.com"'
 ```
+
+Không giấu lỗi của `osascript` (đừng `2>/dev/null`). Lỗi `osascript is not allowed assistive access (-25211)`: macOS chưa cho ứng dụng đang chạy Claude Code (Terminal / VS Code) quyền **Accessibility**; quyền này có thể mất giữa chừng. Người dùng tự bật ở System Settings → Privacy & Security → Accessibility. Chưa có quyền thì kiểm phần logic ở tầng API (vd gọi thẳng Supabase bằng `curl` với dữ liệu app tạo ra, lấy từ log) và báo rõ phần giao diện chưa bấm thử được.
 
 Chụp lại để xác nhận. Cách đổi này chính xác với phần tử ở giữa màn hình (nút, tab); sát mép trái/phải dễ trượt vì viền máy. Bấm trượt hai lần thì thôi, mở màn hình bằng deep link hoặc báo người dùng tự bấm.
 

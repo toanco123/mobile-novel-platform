@@ -6,17 +6,40 @@ const NAMES = [
   '--color-card',
   '--color-border',
   '--color-primary',
+  '--color-primary-foreground',
   '--color-muted-foreground',
+  '--color-destructive',
+  '--color-rose-gold',
   '--color-neon',
 ] as const
 
 /**
- * Màu của theme hiện tại cho chỗ không nhận className (thanh tab, header của điều hướng, icon).
- * Còn lại dùng class token (bg-background, text-foreground...).
+ * Màu của theme hiện tại cho chỗ không nhận className (thanh tab, header của điều hướng, màu icon
+ * lucide). Còn lại dùng class token (bg-background, text-foreground...).
  */
 export function useThemeColors() {
-  const [background, foreground, card, border, primary, mutedForeground, neon] = useCSSVariable([
-    ...NAMES,
-  ]).map(String)
-  return { background, foreground, card, border, primary, mutedForeground, neon }
+  const [
+    background,
+    foreground,
+    card,
+    border,
+    primary,
+    primaryForeground,
+    mutedForeground,
+    destructive,
+    roseGold,
+    neon,
+  ] = useCSSVariable([...NAMES]).map(String)
+  return {
+    background,
+    foreground,
+    card,
+    border,
+    primary,
+    primaryForeground,
+    mutedForeground,
+    destructive,
+    roseGold,
+    neon,
+  }
 }

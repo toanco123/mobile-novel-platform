@@ -9,7 +9,7 @@ Web đọc truyện (`web-novel-platform`) đã chạy ổn trên Supabase. Mụ
 - **Backend:** cùng project Supabase với web. Mọi thay đổi DB (migration, RLS, RPC) vẫn làm ở web; app chỉ đọc và sinh lại kiểu.
 - **Công nghệ:** React Native + Expo (TypeScript), để dùng lại cách viết và phần logic của web (React, TanStack Query, Zustand, zod, react-hook-form).
 
-**Trạng thái:** Bước 0 ✅ (01/10/2026). Bước 1–5 chưa làm.
+**Trạng thái:** Bước 0 ✅ (01/10/2026). Bước 1 ✅ trừ đăng nhập Apple (01/10/2026, plan riêng: `plan-dang-nhap-va-tai-khoan.md`). Bước 2–5 chưa làm.
 
 ---
 
@@ -117,7 +117,7 @@ mobile-novel-platform/
 - 4 tab với màn hình tạm; Trang chủ gọi thử `getGenres` để kiểm tra kết nối Supabase; tab Tài khoản có nút đổi theme.
 - `npm run typecheck`, `lint`, `test`, `npx expo export --platform ios` đều qua.
 
-### Bước 1: Nền giao diện + đăng nhập
+### Bước 1: Nền giao diện + đăng nhập ✅ trừ Apple (01/10/2026, chi tiết: `plan-dang-nhap-va-tai-khoan.md`)
 - Thành phần cơ bản trong `components/ui/`: Text, Button, Input, FormField (nhãn, lỗi, `aria` như web), Skeleton, EmptyState.
 - `AuthSync` (như web), hook `useSession` cùng key `['auth', 'session']`.
 - Màn hình đăng nhập, đăng ký, quên mật khẩu, đặt lại mật khẩu, `auth/callback` (deep link gọi `completeAuthRedirect(url)`).

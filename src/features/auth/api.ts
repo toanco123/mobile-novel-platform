@@ -209,12 +209,14 @@ export function onAuthStateChange(onChange: () => void): () => void {
   return () => data.subscription.unsubscribe()
 }
 
+/** Tham số của deep link quay về (màn hình đọc bằng useLocalSearchParams) */
+export type AuthRedirectParams = { code?: string; error?: string }
+
 /**
  * Deep link quay về app (sau khi đăng nhập Google/Facebook, bấm link xác nhận email hoặc link đặt
  * lại mật khẩu): đổi ?code= lấy phiên. Link đặt lại mật khẩu mở ra phiên tạm cho updatePassword.
  */
-export async function completeAuthRedirect(url: string): Promise<User | null> {
-  const params = redirectParams(url)
+export async function completeAuthRedirect(params: AuthRedirectParams): Promise<User | null> {
   if (params.error) {
     throw new AuthError(
       'unknown',
@@ -277,7 +279,7 @@ export async function signInWithProvider(provider: SocialProvider): Promise<User
   if (error) throw authError(error)
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo)
   if (result.type !== 'success') return null
-  return completeAuthRedirect(result.url)
+  return completeAuthRedirect(redirectParams(result.url))
 }
 
 /** Không báo email có tồn tại hay không (Supabase cũng không báo) */

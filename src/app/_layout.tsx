@@ -7,12 +7,16 @@ import { StatusBar } from 'expo-status-bar'
 import { useEffect } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { Toaster } from 'sonner-native'
+import { AuthSync } from '@/features/auth/components/AuthSync'
 import { useTheme } from '@/hooks/useTheme'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { fonts } from '@/lib/fonts'
 import { queryClient } from '@/lib/queryClient'
 
 SplashScreen.preventAutoHideAsync()
+
+// Mở app thẳng từ deep link (link trong email) thì vẫn có thanh tab bên dưới màn đăng nhập
+export const unstable_settings = { anchor: '(tabs)' }
 
 /** Màu nền, header... của thư viện điều hướng lấy theo token của theme hiện tại */
 function useNavigationTheme() {
@@ -36,6 +40,7 @@ function useNavigationTheme() {
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(fonts)
   const theme = useTheme((s) => s.theme)
+  const colors = useThemeColors()
   const navigationTheme = useNavigationTheme()
   const ready = fontsLoaded || !!fontError
 
@@ -49,7 +54,29 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={navigationTheme}>
-          <Stack screenOptions={{ headerShown: false }} />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              headerStyle: { backgroundColor: colors.background },
+              headerShadowVisible: false,
+              headerTintColor: colors.foreground,
+              headerTitleStyle: { fontFamily: 'BeVietnamPro_600SemiBold', fontSize: 17 },
+              headerBackButtonDisplayMode: 'minimal',
+            }}
+          >
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="account/profile" options={{ headerShown: true, title: 'Hồ sơ' }} />
+            <Stack.Screen
+              name="account/password"
+              options={{ headerShown: true, title: 'Đổi mật khẩu' }}
+            />
+            <Stack.Screen
+              name="account/delete"
+              options={{ headerShown: true, title: 'Xóa tài khoản' }}
+            />
+          </Stack>
+          <AuthSync />
           <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
           <Toaster position="bottom-center" />
         </ThemeProvider>

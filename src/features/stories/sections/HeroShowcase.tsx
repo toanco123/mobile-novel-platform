@@ -21,14 +21,12 @@ import { links } from '@/lib/links'
 import { cn } from '@/lib/utils'
 import type { Story } from '@/types/story'
 import { coverPalette } from '../coverPalette'
+import { HERO } from '../heroColors'
 import { useFeaturedStories } from '../hooks'
 import { StoryCover } from '../StoryCover'
 
 const SLIDE_MS = 7000
-// Banner luôn trên nền tối cố định (như web), không theo theme
-const INK = '#f4e7ed'
-const GOLD = '#d9a68f'
-const NEON = '#ff3d8b'
+const { ink: INK, gold: GOLD, neon: NEON } = HERO
 
 /**
  * Truyện nổi bật (HeroShowcase của web): vuốt ngang từng trang, tự chuyển sau 7 giây; dừng khi
@@ -176,7 +174,7 @@ function Slide({ story, width }: { story: Story; width: number }) {
 
       <View className="mt-5 flex-row flex-wrap gap-2.5">
         <Button
-          icon={<BookOpen size={17} color="#1a0f1d" />}
+          icon={<BookOpen size={17} color={HERO.base} />}
           onPress={() => router.push(links.chapter(story.slug, first))}
           className="h-11 rounded-full px-5"
           style={{ backgroundColor: NEON }}

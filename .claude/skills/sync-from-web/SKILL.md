@@ -1,0 +1,54 @@
+---
+name: sync-from-web
+description: Dùng khi web (../web-novel-platform) đổi code mà app đã chép (api.remote.ts, shared.ts, schemas.ts của auth, stories, chapters, library, comments, genres, feedback; src/types; các lib thuần; config/site.ts), khi web có migration Supabase mới, khi thêm feature cần lấy code từ web, hoặc khi người dùng bảo đồng bộ / cập nhật app theo web.
+---
+
+# Đồng bộ code dùng chung từ web
+
+App không import code của web mà chép sang rồi sửa cho điện thoại (lý do: mục 3 của `documents/plan-app-di-dong.md`). Mốc commit web đã đồng bộ lần cuối ghi ở `documents/dong-bo-web.md`. Thay đổi DB chỉ làm ở web; app chỉ sinh lại kiểu.
+
+## Quy trình
+
+1. Xem web đổi gì từ mốc (chỉ đồng bộ code web **đã commit**; web còn sửa dở thì hỏi người dùng trước):
+   ```bash
+   W=../web-novel-platform
+   git -C $W log --oneline <mốc>..HEAD
+   git -C $W diff --stat <mốc>..HEAD -- src/types src/lib src/config supabase/migrations \
+     src/features/{auth,stories,chapters,library,comments,genres,feedback}
+   ```
+2. Với từng file đổi, tra bảng dưới: **chép nguyên** (`cp`) hay **áp diff bằng tay** (`git -C $W diff <mốc>..HEAD -- <file>` rồi sửa file của app cho khớp, giữ phần riêng của app).
+3. Có migration mới trong `supabase/migrations` thì `npm run gen:types` (cần `supabase login`).
+4. `npm run typecheck`, `npm test`, `npm run lint`. Lỗi kiểu ở `api.ts` hay hook thường do web đổi chữ ký hàm hoặc cột: sửa theo web.
+5. Hàm đổi tham số, kiểu trả về hay query key thì sửa hook và màn hình dùng nó; giao diện đổi thì kiểm bằng skill `simulator-check`.
+6. Ghi mốc mới (commit web, ngày, tóm tắt) vào `documents/dong-bo-web.md`.
+
+## Bảng file
+
+| Web (`src/...`)                                                                                            | App                                    | Cách đồng bộ                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `types/*.ts` (trừ `database.ts`)                                                                           | như web                                | Chép nguyên                                                                                                                                                                                                                                                 |
+| `types/database.ts`                                                                                        | như web                                | Không chép: `npm run gen:types`                                                                                                                                                                                                                             |
+| `lib/{slugify,dbError,dbPage,uuid,format,pagination,routes}.ts` (+ `*.test.ts` nếu có)                     | như web                                | Chép nguyên                                                                                                                                                                                                                                                 |
+| `config/site.ts`                                                                                           | như web                                | Chép nguyên                                                                                                                                                                                                                                                 |
+| `features/<x>/shared.ts`, `schemas.ts`; `stories/browseParams.ts`; `library/resume.ts`; `auth/initials.ts` | như web                                | Chép nguyên                                                                                                                                                                                                                                                 |
+| `features/<x>/api.remote.ts` (stories, chapters, library, comments, genres, feedback)                      | `features/<x>/api.ts`                  | Áp diff: giữ dòng đầu ghi nguồn và `export * from './shared'`                                                                                                                                                                                               |
+| `features/stories/cards.remote.ts`                                                                         | như web                                | Áp diff: giữ dòng đầu ghi nguồn                                                                                                                                                                                                                             |
+| `features/library/guestHistory.ts`, `pendingProgress.ts`                                                   | như web                                | Áp diff: `readMock`/`writeMock` (`@/lib/mockStorage`) → `readLocal`/`writeLocal` (`@/lib/localStore`)                                                                                                                                                       |
+| `features/chapters/richText.ts` (+ `richText.test.ts`)                                                     | như web                                | Áp diff bằng tay: app đọc cây thẻ bằng htmlparser2 (`tagOf(node)` thay `node.tagName`, `isTag`/`isText`, `node.attribs.x` thay `getAttribute`, `node.children`). Test **chép nguyên** và phải qua                                                           |
+| `features/auth/api.remote.ts` + phần thêm ở `auth/api.ts` (`requireUserId`, `socialProviders`)             | `features/auth/api.ts`                 | Áp diff bằng tay, giữ phần riêng: `appUrl`, `redirectParams`, `completeAuthRedirect(url)` tự đổi `?code=`, `signInWithProvider` qua `WebBrowser.openAuthSessionAsync`, `isLocalImage`, `isOnline()`, `readLocal`/`writeLocal`, `EXPO_PUBLIC_AUTH_PROVIDERS` |
+| `lib/network.ts`, `imageUpload.ts`, `image.ts`, `siteUrl.ts`                                               | như web                                | Áp diff phần logic, giữ phần riêng: NetInfo, upload file `file://` bằng expo-file-system + `randomUUID` của expo-crypto, `process.env.EXPO_PUBLIC_*`; `image.ts` chỉ giữ các lớp lỗi                                                                        |
+| `lib/supabase.ts`, `lib/mockStorage.ts`                                                                    | `lib/supabase.ts`, `lib/localStore.ts` | Không đồng bộ: app viết riêng                                                                                                                                                                                                                               |
+| `features/{studio,admin}`, `mocks/`, `api.mock.ts`, `api.ts` của web, component, hook, trang               | không có                               | Không chép (phần người đọc của app tự viết giao diện; kho offline viết riêng bằng expo-sqlite)                                                                                                                                                              |
+
+Chép file mới (feature hay lib web mới thêm mà app cần): theo cùng quy tắc, thêm dòng đầu `// Chép từ web: src/...` nếu có sửa, rồi thêm vào bảng này và mục 3 của plan.
+
+## Quy tắc khi chép
+
+- Không để lọt API chỉ có trên trình duyệt: `window`, `document`, `navigator`, `localStorage` dùng thẳng (→ `localStore`), `import.meta.env` (→ `process.env.EXPO_PUBLIC_*`), `DOMParser`, `crypto.randomUUID` (→ expo-crypto), `Blob`/`FileReader`/canvas. Kiểm nhanh (bỏ dòng chú thích):
+  ```bash
+  grep -rnE "window\.|document\.|navigator\.|import\.meta|DOMParser|mockStorage|crypto\.randomUUID" src \
+    | grep -vE ":[0-9]+:\s*(//|\*|/\*)"
+  ```
+- Giữ nguyên tên file, tên hàm và query key như web (trừ `api.remote.ts` → `api.ts`), để lần sau diff được.
+- Web thêm biến env `VITE_X` mà code chép cần: thêm `EXPO_PUBLIC_X` vào `.env.example`, `src/env.d.ts` và `.env`.
+- Web thêm thư viện mà code chép dùng: cài bằng `npx expo install <gói>` (không `npm install`), kiểm gói chạy được trên React Native.

@@ -42,3 +42,6 @@ example
 # generated native folders
 /ios
 /android
+
+# Cài đặt Claude Code riêng của từng người
+.claude/settings.local.json

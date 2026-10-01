@@ -90,6 +90,7 @@ mobile-novel-platform/
 1. Thay đổi DB chỉ làm ở web (`supabase/migrations`). Có migration mới thì chạy `npm run gen:types` ở app; `tsc` báo lỗi đúng chỗ `api.ts` bị ảnh hưởng.
 2. Sửa `api.remote.ts`, `shared.ts`, `schemas.ts` của 7 feature người đọc (auth, stories, chapters, library, comments, genres, feedback) ở web thì sửa theo ở app. Mỗi file chép có dòng đầu ghi nguồn.
 3. Query key giữ giống web (vd `['genres']`) để dễ đối chiếu.
+4. Cách làm từng lần đồng bộ (so sánh từ mốc, file nào chép nguyên, file nào áp diff bằng tay): skill `sync-from-web`. Mốc commit web đã đồng bộ: `documents/dong-bo-web.md`.
 
 ## 4. Màn hình
 

@@ -1,8 +1,8 @@
 // Test của web (src/features/offline/store.test.ts), chạy trên SQLite thật của Node (node:sqlite) thay
 // expo-sqlite: cùng câu SQL, cùng hành vi. Ba test cuối thay "IndexedDB bị chặn / treo" bằng "mở
 // file SQLite lỗi / treo".
-import { DatabaseSync } from 'node:sqlite'
 import { fakeChapter } from '@/test/fakeChapter'
+import { nodeSql } from '@/test/nodeSql'
 import type { OfflineSql, SqlParam } from './sqlite'
 import { openOfflineDatabase } from './sqlite'
 import {
@@ -24,29 +24,6 @@ import {
 } from './store'
 
 vi.mock('./sqlite', () => ({ openOfflineDatabase: vi.fn() }))
-
-/** Bọc node:sqlite theo đúng các hàm expo-sqlite mà kho dùng */
-function nodeSql(): OfflineSql {
-  const db = new DatabaseSync(':memory:')
-  return {
-    execAsync: async (source) => void db.exec(source),
-    runAsync: async (source, params) => db.prepare(source).run(...(params as never[])),
-    getFirstAsync: async <T>(source: string, params: SqlParam[]) =>
-      (db.prepare(source).get(...(params as never[])) as T | undefined) ?? null,
-    getAllAsync: async <T>(source: string, params: SqlParam[]) =>
-      db.prepare(source).all(...(params as never[])) as T[],
-    withTransactionAsync: async (task) => {
-      db.exec('BEGIN')
-      try {
-        await task()
-        db.exec('COMMIT')
-      } catch (error) {
-        db.exec('ROLLBACK')
-        throw error
-      }
-    },
-  }
-}
 
 let sql: OfflineSql
 

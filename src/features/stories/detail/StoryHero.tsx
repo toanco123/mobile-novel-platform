@@ -9,6 +9,7 @@ import { Text } from '@/components/ui/text'
 import { useSession } from '@/features/auth/hooks'
 import { openWebPage } from '@/features/auth/navigation'
 import { FollowButton } from '@/features/library/components/FollowButton'
+import { DownloadButton } from '@/features/offline/components/DownloadButton'
 import { useStoryProgress } from '@/features/library/hooks'
 import { formatCount, formatRelativeTime } from '@/lib/format'
 import { links } from '@/lib/links'
@@ -138,6 +139,7 @@ export function StoryHero({ story }: { story: Story }) {
           ) : (
             <FollowButton slug={story.slug} onDark />
           )}
+          <StoryDownloadButton story={story} />
         </View>
       </View>
     </View>
@@ -224,5 +226,19 @@ export function StoryHeroSkeleton() {
       <Skeleton className="h-11 w-full rounded-full" />
       <Skeleton className="h-11 w-full rounded-full" />
     </View>
+  )
+}
+
+/** Như web: tải từ chỗ đọc dở, chưa đọc thì từ chương đầu; truyện chưa công khai không lưu offline */
+function StoryDownloadButton({ story }: { story: Story }) {
+  const { data: progress } = useStoryProgress(story.slug)
+  if (story.firstChapterNumber === null || story.visibility !== 'published') return null
+  return (
+    <DownloadButton
+      slug={story.slug}
+      title={story.title}
+      from={progress?.chapter ?? story.firstChapterNumber}
+      onDark
+    />
   )
 }

@@ -270,6 +270,8 @@ function ReaderView({ chapter, resume }: { chapter: ChapterContent; resume: numb
       >
         <ReaderChapterIndex
           slug={chapter.story.slug}
+          title={chapter.story.title}
+          downloadable={chapter.story.visibility === 'published'}
           current={chapter.number}
           max={chapter.story.chapterCount}
           onNavigate={() => setPanel(null)}

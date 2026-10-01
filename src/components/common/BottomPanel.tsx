@@ -62,9 +62,7 @@ export function BottomPanel({
                 {title}
               </Text>
               {description ? (
-                <Text numberOfLines={2} className="mt-0.5 text-sm text-muted-foreground">
-                  {description}
-                </Text>
+                <Text className="mt-0.5 text-sm text-muted-foreground">{description}</Text>
               ) : null}
             </View>
             <Pressable

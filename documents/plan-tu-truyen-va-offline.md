@@ -7,7 +7,7 @@ Bước 3 của `plan-app-di-dong.md`, chia nhỏ như bước 2 (01/10/2026): l
 |---|---|---|
 | **3a** | Tab Tủ truyện: Đang theo dõi (số chương mới), Lịch sử đọc (cả khách); gửi chỗ đọc ghi lúc mất mạng khi có mạng lại | ✅ (01/10/2026) |
 | **3b** | Kho chương trên máy (expo-sqlite, như `features/offline` của web): lưu chương đã mở, tải trước 5 chương, trang đọc đọc từ kho khi mất mạng | ✅ (01/10/2026) |
-| **3c** | Tải truyện về đọc offline (ghim), tab Đã lưu, giới hạn 300 chương không ghim | chưa làm |
+| **3c** | Tải truyện về đọc offline (ghim), tab Đã lưu, giới hạn 300 chương không ghim | ✅ (01/10/2026) |
 
 Hook và api của tủ truyện đã chép từ web ở 2a (`features/library/`), gồm cả gộp lịch sử khách lên tài khoản khi đăng nhập (`mergeGuestHistory` trong `api.ts`).
 
@@ -51,3 +51,20 @@ Như `features/offline` của web (store, readChapter, prefetch, hooks), giữ n
 - `store.test.ts`: test của web chạy trên SQLite thật của Node (`node:sqlite`, Node 24) qua cùng câu SQL; 11 test qua (thêm test truyện nháp không được lưu; 2 test "IndexedDB bị chặn / treo" đổi thành "mở file SQLite lỗi / treo").
 - Máy ảo: thử tạm lúc mở app (đã gỡ): kho mở được, lưu, đọc lại đủ nội dung, `walkSaved`, `markRead` + "Đọc tiếp" của `listSavedStories` đều đúng trên expo-sqlite thật.
 - Chưa thử được trọn luồng mất mạng trên máy ảo (DB chưa có truyện công khai; simulator không tắt mạng riêng được bằng dòng lệnh): đọc chương đã lưu khi offline, tải trước, `NotSavedNotice`, mục lục offline. Kiểm khi có truyện thật (bật Network Link Conditioner hoặc chế độ máy bay trên điện thoại).
+
+---
+
+## 3c. Tải về đọc offline, tab Đã lưu
+Như `downloads.ts`, `DownloadButton`, `SavedList` của web:
+
+| Phần | Web | App |
+|---|---|---|
+| Tải về | `downloadChapters`: từng đợt 20 chương, ghim, chương đã có thì ghim tại chỗ; tiến độ ở store Zustand (không persist); hủy được; báo lỗi mất mạng / bộ nhớ đầy | Chép từ web (toast của sonner-native). Đóng app thì dừng, bấm tải lại chỉ lấy phần còn thiếu |
+| Nút tải về | `DownloadButton` + hộp thoại (20 / 50 / toàn bộ chương, tiến độ, hủy) | Nút + `BottomPanel`. Đặt ở đầu trang truyện (tải từ chỗ đọc dở, chưa đọc thì chương đầu; chỉ truyện công khai) và mục lục trang đọc (tải từ chương đang đọc). Mất mạng thì khóa nút |
+| Tab Đã lưu | `SavedList` (`?tab=saved`) | Mục thứ ba của Tủ truyện: truyện có chương trên máy, số chương + dung lượng, nhãn "Đã tải về", Đọc tiếp (kèm `resume`), xóa một truyện, "Xóa tất cả" hỏi lại (`Alert`). Không chờ phiên đăng nhập (dùng được khi offline). `NotSavedNotice` mở thẳng tab này (`/library?tab=saved`) |
+
+**Kết quả 3c (01/10/2026):**
+- Code: `features/offline/downloads.ts`, `components/` (DownloadButton, SavedList, NotSavedNotice mở thẳng tab Đã lưu); `useChapterCountFrom` trong `chapters/hooks.ts`; nút ở `StoryHero` và `ReaderChapterIndex`; tab Đã lưu trong `(tabs)/library.tsx` (mục đang xem ở `?tab=`). `LibraryRow` nhận thông tin truyện tối giản (bản lưu chỉ có phần truyện của trang đọc).
+- `downloads.test.ts`: 7 ca theo `download.test.tsx` của web (tải 20 chương, chia đợt, ghim chương có sẵn, chuỗi lưu dừng ở chương mới nhất cũ, hủy giữa chừng rồi tải tiếp, mất mạng giữa chừng, không mở được kho), chạy trên kho SQLite của Node.
+- Máy ảo (dữ liệu mẫu ghi thẳng vào kho SQLite, đã gỡ): tab Đã lưu (số truyện, dung lượng, khoảng chương, nhãn "Đã tải về", Đọc tiếp, xóa), nút "Tải về đọc offline" ở đầu trang truyện và bảng chọn 20 / 50 / toàn bộ chương (tải từ chỗ đọc dở). Sửa: mô tả của `BottomPanel` bị cắt ở 2 dòng.
+- "Đọc tiếp" một truyện mẫu trong kho: trang đọc mở bản lưu rồi làm mới ở nền, máy chủ không có truyện đó nên chương báo không tìm thấy và truyện bị dọn khỏi kho, đúng như web. Luồng đọc khi mất mạng và tải thật cần truyện có trên máy chủ (kiểm khi DB có truyện công khai).

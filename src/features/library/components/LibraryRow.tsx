@@ -9,7 +9,8 @@ import { cn } from '@/lib/utils'
 import type { Story } from '@/types/story'
 
 type Props = {
-  story: Story
+  /** Chỉ cần phần dùng cho bìa và link (tab Đã lưu chỉ có thông tin truyện trong bản lưu) */
+  story: Pick<Story, 'slug' | 'title' | 'coverUrl' | 'author'>
   /** Dòng tên truyện (tên + nhãn) */
   title: ReactNode
   /** Thông tin bên dưới tên: chương, thời gian, thanh % */

@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/text'
 import { CHAPTERS_PER_PAGE } from '@/features/chapters/api'
 import { JumpToChapter } from '@/features/chapters/components/JumpToChapter'
 import { useChapterList } from '@/features/chapters/hooks'
+import { DownloadButton } from '@/features/offline/components/DownloadButton'
 import { useSavedChapters } from '@/features/offline/hooks'
 import { useOnline } from '@/hooks/useOnline'
 import { cn } from '@/lib/utils'
@@ -13,6 +14,10 @@ import { goToChapter } from '../navigation'
 
 type Props = {
   slug: string
+  /** Tên truyện (thông báo tải về) */
+  title: string
+  /** Có nút tải về đọc offline (chỉ truyện công khai) */
+  downloadable: boolean
   current: number
   /** Số chương lớn nhất (để kiểm tra ô "đi tới chương") */
   max: number
@@ -23,7 +28,7 @@ type Props = {
 const ROW_HEIGHT = 44
 
 /** Như ReaderChapterIndex của web: mở sẵn khoảng 50 chương chứa chương đang đọc, cuộn tới chương đó */
-export function ReaderChapterIndex({ slug, current, max, onNavigate }: Props) {
+export function ReaderChapterIndex({ slug, title, downloadable, current, max, onNavigate }: Props) {
   const [page, setPage] = useState(() => Math.max(1, Math.ceil(current / CHAPTERS_PER_PAGE)))
   const { data, isPending, isError, isPlaceholderData } = useChapterList(slug, page, 'asc')
   const online = useOnline()
@@ -71,6 +76,9 @@ export function ReaderChapterIndex({ slug, current, max, onNavigate }: Props) {
           </ScrollView>
         )}
         <JumpToChapter slug={slug} max={max} onJump={open} />
+        {downloadable && (
+          <DownloadButton slug={slug} title={title} from={current} className="h-10 self-start" />
+        )}
       </View>
 
       {!online && !data ? (

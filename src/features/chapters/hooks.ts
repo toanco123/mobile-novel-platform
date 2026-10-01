@@ -61,3 +61,10 @@ export function useRecordChapterView(slug: string, number: number | undefined) {
     if (number !== undefined) void api.recordChapterView(slug, number)
   }, [slug, number])
 }
+
+/** Số chương đã xuất bản từ chương `from` trở đi (bảng tải về đọc offline) */
+export const useChapterCountFrom = (slug: string, from: number) =>
+  useQuery({
+    queryKey: chapterKeys.countFrom(slug, from),
+    queryFn: () => api.countChaptersFrom(slug, from),
+  })

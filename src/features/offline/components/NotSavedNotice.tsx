@@ -19,10 +19,9 @@ export function NotSavedNotice({ number, onRetry }: { number: number; onRetry: (
         <Button onPress={onRetry} className="h-11 rounded-full px-5" textClassName="text-sm">
           Thử lại
         </Button>
-        {/* Tab Đã lưu thêm ở 3c; tạm mở Tủ truyện */}
         <Button
           variant="outline"
-          onPress={() => router.navigate('/library')}
+          onPress={() => router.navigate({ pathname: '/library', params: { tab: 'saved' } })}
           className="h-11 rounded-full px-5"
           textClassName="text-sm"
         >

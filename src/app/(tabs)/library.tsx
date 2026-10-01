@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, RefreshControl, View } from 'react-native'
 import { SegmentedTabs } from '@/components/common/SegmentedTabs'
@@ -10,21 +10,25 @@ import { FollowingList } from '@/features/library/components/FollowingList'
 import { HistoryList } from '@/features/library/components/HistoryList'
 import { LibraryEmpty } from '@/features/library/components/LibraryStates'
 import { useLibraryUpdateCount } from '@/features/library/hooks'
+import { SavedList } from '@/features/offline/components/SavedList'
 import { useThemeColors } from '@/hooks/useThemeColors'
 
-type Tab = 'following' | 'history'
+type Tab = 'following' | 'history' | 'saved'
+const TABS: readonly string[] = ['following', 'history', 'saved']
 
-/** Tủ truyện (LibraryPage của web): Đang theo dõi, Lịch sử đọc; tab Đã lưu thêm ở 3c */
+/** Tủ truyện (LibraryPage của web): Đang theo dõi, Lịch sử đọc, Đã lưu. Mục đang xem ở `?tab=` như web */
 export default function LibraryScreen() {
   const { data: user, isPending } = useSession()
   const { data: updates = 0 } = useLibraryUpdateCount()
   const queryClient = useQueryClient()
   const colors = useThemeColors()
-  // null: chưa chọn, dùng mặc định như web (khách xem lịch sử, đã đăng nhập xem truyện theo dõi)
-  const [picked, setPicked] = useState<Tab | null>(null)
+  const params = useLocalSearchParams<{ tab?: string }>()
+  // Chưa chọn thì dùng mặc định như web (khách xem lịch sử, đã đăng nhập xem truyện theo dõi)
+  const picked = TABS.includes(params.tab ?? '') ? (params.tab as Tab) : null
   const [refreshing, setRefreshing] = useState(false)
 
-  if (isPending) {
+  // Tab Đã lưu chỉ đọc kho trên máy: không chờ phiên (lúc offline có thể chờ khá lâu), như web
+  if (isPending && picked !== 'saved') {
     return (
       <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator colorClassName="accent-primary" />
@@ -36,7 +40,11 @@ export default function LibraryScreen() {
 
   async function refresh() {
     setRefreshing(true)
-    await queryClient.refetchQueries({ queryKey: ['library'], type: 'active' })
+    await Promise.all(
+      [['library'], ['offline']].map((queryKey) =>
+        queryClient.refetchQueries({ queryKey, type: 'active' }),
+      ),
+    )
     setRefreshing(false)
   }
   const refreshControl = (
@@ -48,7 +56,7 @@ export default function LibraryScreen() {
       <SegmentedTabs
         label="Mục trong tủ truyện"
         value={tab}
-        onChange={setPicked}
+        onChange={(next) => router.setParams({ tab: next })}
         items={[
           {
             value: 'following',
@@ -66,6 +74,7 @@ export default function LibraryScreen() {
               ) : null,
           },
           { value: 'history', label: 'Lịch sử đọc' },
+          { value: 'saved', label: 'Đã lưu' },
         ]}
       />
       {tab === 'history' && !user && (
@@ -82,6 +91,13 @@ export default function LibraryScreen() {
     </View>
   )
 
+  if (tab === 'saved') {
+    return (
+      <View className="flex-1 bg-background">
+        <SavedList header={header} refreshControl={refreshControl} />
+      </View>
+    )
+  }
   if (tab === 'history') {
     return (
       <View className="flex-1 bg-background">

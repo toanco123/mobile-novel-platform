@@ -1,11 +1,13 @@
 import { Tabs } from 'expo-router'
 import { BookMarked, Compass, House, UserRound } from 'lucide-react-native'
 import { SITE_NAME } from '@/config/site'
+import { useLibraryUpdateCount } from '@/features/library/hooks'
 import { useThemeColors } from '@/hooks/useThemeColors'
 
 /** Bốn tab chính thay cho header + menu của web */
 export default function TabsLayout() {
   const colors = useThemeColors()
+  const { data: updates = 0 } = useLibraryUpdateCount()
   return (
     <Tabs
       screenOptions={{
@@ -44,6 +46,12 @@ export default function TabsLayout() {
         name="library"
         options={{
           title: 'Tủ truyện',
+          // Số truyện đang theo dõi có chương mới (như nhãn neon của web)
+          tabBarBadge: updates > 0 ? updates : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: colors.neon,
+            fontFamily: 'BeVietnamPro_600SemiBold',
+          },
           tabBarIcon: ({ color, size }) => <BookMarked color={color} size={size} />,
         }}
       />

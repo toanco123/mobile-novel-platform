@@ -17,6 +17,9 @@ import { PlaceholderScreen } from '@/components/common/PlaceholderScreen'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useChapter, useRecordChapterView } from '@/features/chapters/hooks'
+import { NotSavedNotice } from '@/features/offline/components/NotSavedNotice'
+import { usePrefetchChapters } from '@/features/offline/prefetch'
+import { ChapterNotSavedError } from '@/features/offline/readChapter'
 import { ChapterArticle } from '@/features/reader/components/ChapterArticle'
 import { ChapterEnd } from '@/features/reader/components/ChapterEnd'
 import { ChapterNav } from '@/features/reader/components/ChapterNav'
@@ -44,7 +47,8 @@ type ReaderPanel = 'index' | 'settings'
 
 /**
  * Trang đọc từng chương (ChapterReaderPage của web). Cuộn liên tục, tự cuộn, nghe truyện: bước 5;
- * bình luận, báo lỗi chương: bước 4; đọc chương đã lưu khi offline: bước 3.
+ * bình luận, báo lỗi chương: bước 4. Chương đọc qua kho trên máy (features/offline): mất mạng vẫn đọc
+ * được chương đã mở hoặc đã tải trước.
  */
 export default function ChapterScreen() {
   const { slug, chapter, resume } = useLocalSearchParams<{
@@ -73,11 +77,28 @@ export default function ChapterScreen() {
 }
 
 function Reader({ slug, number, resume }: { slug: string; number: number; resume: number }) {
-  const { data: chapter, isPending, isError, refetch, isRefetching } = useChapter(slug, number)
+  const {
+    data: chapter,
+    isPending,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+  } = useChapter(slug, number)
   useRecordChapterView(slug, chapter ? number : undefined)
+  // Mở chương xong thì tải trước vài chương sau vào kho trên máy (đọc tiếp được khi mất mạng)
+  usePrefetchChapters(chapter)
   useKeepAwake()
 
   if (isPending) return <ReaderSkeleton />
+  if (isError && error instanceof ChapterNotSavedError) {
+    return (
+      <>
+        <PlainHeader />
+        <NotSavedNotice number={number} onRetry={() => void refetch()} />
+      </>
+    )
+  }
   if (isError) {
     return (
       <>

@@ -6,7 +6,7 @@ Bước 3 của `plan-app-di-dong.md`, chia nhỏ như bước 2 (01/10/2026): l
 | Phần | Nội dung | Trạng thái |
 |---|---|---|
 | **3a** | Tab Tủ truyện: Đang theo dõi (số chương mới), Lịch sử đọc (cả khách); gửi chỗ đọc ghi lúc mất mạng khi có mạng lại | ✅ (01/10/2026) |
-| **3b** | Kho chương trên máy (expo-sqlite, như `features/offline` của web): lưu chương đã mở, tải trước 5 chương, trang đọc đọc từ kho khi mất mạng | chưa làm |
+| **3b** | Kho chương trên máy (expo-sqlite, như `features/offline` của web): lưu chương đã mở, tải trước 5 chương, trang đọc đọc từ kho khi mất mạng | ✅ (01/10/2026) |
 | **3c** | Tải truyện về đọc offline (ghim), tab Đã lưu, giới hạn 300 chương không ghim | chưa làm |
 
 Hook và api của tủ truyện đã chép từ web ở 2a (`features/library/`), gồm cả gộp lịch sử khách lên tài khoản khi đăng nhập (`mergeGuestHistory` trong `api.ts`).
@@ -30,3 +30,24 @@ Như `LibraryPage` của web, ở tab "Tủ truyện" của thanh tab:
 - Code: `src/app/(tabs)/library.tsx`, `features/library/components/` (FollowingList, HistoryList, LibraryRow + RowFrame, LibraryStates, OfflineSync), `components/common/SegmentedTabs.tsx`; số trên tab ở `(tabs)/_layout.tsx`; `OfflineSync` gắn ở `_layout.tsx`.
 - Simulator (iPhone 17 Pro, theme tối, dữ liệu mẫu nạp tạm vào cache, có phiên đăng nhập giả chỉ trong cache): Đang theo dõi (nhãn chương mới, chương mới nhất, chỗ đang đọc, Đọc tiếp / Đọc, truyện chưa có chương chỉ có nút bỏ theo dõi, số trên tab), Lịch sử đọc, hộp thoại "Xóa toàn bộ"; khách: mặc định Lịch sử đọc + dòng báo lưu trên máy, tab Theo dõi là lời mời đăng nhập.
 - Chưa thử thật trên máy chủ (DB chưa có truyện công khai): bỏ theo dõi, xóa lịch sử, gộp lịch sử khách khi đăng nhập, gửi chỗ đọc chờ khi có mạng lại. Các hàm này chép nguyên từ web (đã có test bên web).
+
+---
+
+## 3b. Kho chương trên máy
+Như `features/offline` của web (store, readChapter, prefetch, hooks), giữ nguyên tên hàm và hành vi:
+
+| Phần | Web | App |
+|---|---|---|
+| Kho | IndexedDB (`idb`), store `chapters` + `contents` | SQLite (expo-sqlite, file `offline-reading.db`): một bảng `chapters`, nội dung là cột cuối và không được chọn khi liệt kê / dọn kho. Mở file ở `sqlite.ts` (tách riêng để test thay bằng `node:sqlite`) |
+| Đọc chương | `readChapter`: có bản lưu thì trả ngay và làm mới ở nền; chưa có thì tải rồi lưu; mất mạng mà chưa lưu thì `ChapterNotSavedError` | Chép từ web, `navigator.onLine` → `isOnline()` (NetInfo) |
+| Query trang đọc | `chapterQuery` (networkMode `always`, không thử lại khi chương chưa lưu) | Chép từ web vào `chapters/hooks.ts` |
+| Tải trước | `usePrefetchChapters`: 5 chương sau, lúc rảnh | Chép từ web; app luôn tải (không có cờ tiết kiệm dữ liệu như trình duyệt, 5 chương chữ chỉ vài chục KB) |
+| Ghi đã đọc | `markRead` trong `useReadingTracker` | Như web |
+| Mất mạng | `NotSavedNotice`; mục lục chỉ hiện chương đã lưu | Như web; `useOnline()` (`src/hooks/useOnline.ts`) đọc `onlineManager` |
+
+- Giới hạn 300 chương không ghim, bộ nhớ đầy (`SQLITE_FULL`) thì dọn 20% rồi thử lại; không mở được kho thì kho coi như trống (như web).
+
+**Kết quả 3b (01/10/2026):**
+- `store.test.ts`: test của web chạy trên SQLite thật của Node (`node:sqlite`, Node 24) qua cùng câu SQL; 11 test qua (thêm test truyện nháp không được lưu; 2 test "IndexedDB bị chặn / treo" đổi thành "mở file SQLite lỗi / treo").
+- Máy ảo: thử tạm lúc mở app (đã gỡ): kho mở được, lưu, đọc lại đủ nội dung, `walkSaved`, `markRead` + "Đọc tiếp" của `listSavedStories` đều đúng trên expo-sqlite thật.
+- Chưa thử được trọn luồng mất mạng trên máy ảo (DB chưa có truyện công khai; simulator không tắt mạng riêng được bằng dòng lệnh): đọc chương đã lưu khi offline, tải trước, `NotSavedNotice`, mục lục offline. Kiểm khi có truyện thật (bật Network Link Conditioner hoặc chế độ máy bay trên điện thoại).

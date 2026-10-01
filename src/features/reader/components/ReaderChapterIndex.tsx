@@ -5,7 +5,10 @@ import { Text } from '@/components/ui/text'
 import { CHAPTERS_PER_PAGE } from '@/features/chapters/api'
 import { JumpToChapter } from '@/features/chapters/components/JumpToChapter'
 import { useChapterList } from '@/features/chapters/hooks'
+import { useSavedChapters } from '@/features/offline/hooks'
+import { useOnline } from '@/hooks/useOnline'
 import { cn } from '@/lib/utils'
+import type { ChapterNeighbor } from '@/types/chapter'
 import { goToChapter } from '../navigation'
 
 type Props = {
@@ -23,6 +26,7 @@ const ROW_HEIGHT = 44
 export function ReaderChapterIndex({ slug, current, max, onNavigate }: Props) {
   const [page, setPage] = useState(() => Math.max(1, Math.ceil(current / CHAPTERS_PER_PAGE)))
   const { data, isPending, isError, isPlaceholderData } = useChapterList(slug, page, 'asc')
+  const online = useOnline()
   const pageCount = data?.pageCount ?? Math.max(1, Math.ceil(max / CHAPTERS_PER_PAGE))
   const total = data?.total ?? max
 
@@ -30,8 +34,6 @@ export function ReaderChapterIndex({ slug, current, max, onNavigate }: Props) {
     onNavigate()
     if (number !== current) goToChapter(slug, number)
   }
-
-  const currentIndex = data?.items.findIndex((c) => c.number === current) ?? -1
 
   return (
     <View className="flex-1">
@@ -71,7 +73,9 @@ export function ReaderChapterIndex({ slug, current, max, onNavigate }: Props) {
         <JumpToChapter slug={slug} max={max} onJump={open} />
       </View>
 
-      {isError ? (
+      {!online && !data ? (
+        <SavedIndex slug={slug} current={current} onOpen={open} />
+      ) : isError ? (
         <Text className="p-4 text-sm text-muted-foreground">
           Không tải được danh sách chương. Đóng mục lục rồi mở lại để thử lại.
         </Text>
@@ -82,47 +86,93 @@ export function ReaderChapterIndex({ slug, current, max, onNavigate }: Props) {
           ))}
         </View>
       ) : (
-        <FlatList
+        <ChapterRows
           // Đổi khoảng chương thì dựng lại danh sách để mở đúng vị trí
           key={page}
-          data={data.items}
-          keyExtractor={(c) => String(c.number)}
-          getItemLayout={(_, index) => ({ length: ROW_HEIGHT, offset: ROW_HEIGHT * index, index })}
-          // Chương đang đọc nằm khoảng giữa bảng thay vì sát mép trên
-          initialScrollIndex={currentIndex > 3 ? currentIndex - 3 : undefined}
-          aria-busy={isPlaceholderData}
-          className={cn(isPlaceholderData && 'opacity-60')}
-          contentContainerClassName="px-2 py-2"
-          renderItem={({ item: c }) => {
-            const active = c.number === current
-            return (
-              <Pressable
-                role="link"
-                aria-selected={active}
-                onPress={() => open(c.number)}
-                style={{ height: ROW_HEIGHT }}
-                className={cn(
-                  'flex-row items-center gap-3 rounded-lg px-3',
-                  active ? 'border border-primary/30 bg-primary/10' : 'active:bg-muted',
-                )}
-              >
-                <Text className="w-10 text-right text-sm text-muted-foreground">
-                  {String(c.number)}
-                </Text>
-                <Text
-                  numberOfLines={1}
-                  className={cn(
-                    'flex-1 text-sm',
-                    active ? 'font-sans-medium text-foreground' : 'text-muted-foreground',
-                  )}
-                >
-                  {c.title}
-                </Text>
-              </Pressable>
-            )
-          }}
+          chapters={data.items}
+          current={current}
+          onOpen={open}
+          busy={isPlaceholderData}
         />
       )}
+    </View>
+  )
+}
+
+/** Danh sách chương, mở sẵn tới chương đang đọc (nằm khoảng giữa bảng thay vì sát mép trên) */
+function ChapterRows({
+  chapters,
+  current,
+  onOpen,
+  busy = false,
+}: {
+  chapters: ChapterNeighbor[]
+  current: number
+  onOpen: (number: number) => void
+  busy?: boolean
+}) {
+  const currentIndex = chapters.findIndex((c) => c.number === current)
+  return (
+    <FlatList
+      data={chapters}
+      keyExtractor={(c) => String(c.number)}
+      getItemLayout={(_, index) => ({ length: ROW_HEIGHT, offset: ROW_HEIGHT * index, index })}
+      initialScrollIndex={currentIndex > 3 ? currentIndex - 3 : undefined}
+      aria-busy={busy}
+      className={cn(busy && 'opacity-60')}
+      contentContainerClassName="px-2 py-2"
+      renderItem={({ item: c }) => {
+        const active = c.number === current
+        return (
+          <Pressable
+            role="link"
+            aria-selected={active}
+            onPress={() => onOpen(c.number)}
+            style={{ height: ROW_HEIGHT }}
+            className={cn(
+              'flex-row items-center gap-3 rounded-lg px-3',
+              active ? 'border border-primary/30 bg-primary/10' : 'active:bg-muted',
+            )}
+          >
+            <Text className="w-10 text-right text-sm text-muted-foreground">
+              {String(c.number)}
+            </Text>
+            <Text
+              numberOfLines={1}
+              className={cn(
+                'flex-1 text-sm',
+                active ? 'font-sans-medium text-foreground' : 'text-muted-foreground',
+              )}
+            >
+              {c.title}
+            </Text>
+          </Pressable>
+        )
+      }}
+    />
+  )
+}
+
+/** Như web: mất mạng (chưa có mục lục) thì chỉ liệt kê chương đã lưu trên máy của truyện */
+function SavedIndex({
+  slug,
+  current,
+  onOpen,
+}: {
+  slug: string
+  current: number
+  onOpen: (number: number) => void
+}) {
+  const { data } = useSavedChapters(slug)
+  if (!data) return null
+  return (
+    <View className="flex-1">
+      <Text className="px-5 pt-3 text-sm text-muted-foreground">
+        {data.length
+          ? 'Đang offline, các chương đã lưu:'
+          : 'Đang offline và truyện này chưa có chương nào được lưu.'}
+      </Text>
+      <ChapterRows chapters={data} current={current} onOpen={onOpen} />
     </View>
   )
 }

@@ -9,7 +9,7 @@ Web đọc truyện (`web-novel-platform`) đã chạy ổn trên Supabase. Mụ
 - **Backend:** cùng project Supabase với web. Mọi thay đổi DB (migration, RLS, RPC) vẫn làm ở web; app chỉ đọc và sinh lại kiểu.
 - **Công nghệ:** React Native + Expo (TypeScript), để dùng lại cách viết và phần logic của web (React, TanStack Query, Zustand, zod, react-hook-form).
 
-**Trạng thái:** Bước 0 ✅ (01/10/2026). Bước 1 ✅ trừ đăng nhập Apple (01/10/2026, plan riêng: `plan-dang-nhap-va-tai-khoan.md`). Bước 2 ✅ (01/10/2026, chia 2a trang chủ, 2b chi tiết truyện, 2c trang đọc từng chương: `plan-trang-chu-va-doc-truyen.md`). Bước 3 chia 3a/3b/3c (`plan-tu-truyen-va-offline.md`): 3a tủ truyện ✅ (01/10/2026). Bước 4–5 chưa làm.
+**Trạng thái:** Bước 0 ✅ (01/10/2026). Bước 1 ✅ trừ đăng nhập Apple (01/10/2026, plan riêng: `plan-dang-nhap-va-tai-khoan.md`). Bước 2 ✅ (01/10/2026, chia 2a trang chủ, 2b chi tiết truyện, 2c trang đọc từng chương: `plan-trang-chu-va-doc-truyen.md`). Bước 3 chia 3a/3b/3c (`plan-tu-truyen-va-offline.md`): 3a tủ truyện ✅, 3b kho chương trên máy ✅ (01/10/2026). Bước 4–5 chưa làm.
 
 ---
 

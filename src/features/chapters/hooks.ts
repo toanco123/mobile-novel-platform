@@ -1,8 +1,15 @@
-// Chép từ web: src/features/chapters/hooks.ts (cùng query key). Khác web: chưa có kho chương trên máy
-// (features/offline, bước 3) nên trang đọc lấy chương thẳng từ api.
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+// Chép từ web: src/features/chapters/hooks.ts (cùng query key). Chưa có useFetchChapter (nghe truyện,
+// bước 5).
+import {
+  keepPreviousData,
+  type QueryClient,
+  queryOptions,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { useEffect } from 'react'
-import type { ChapterOrder } from '@/types/chapter'
+import { ChapterNotSavedError, readChapter } from '@/features/offline/readChapter'
+import type { ChapterContent, ChapterOrder } from '@/types/chapter'
 import * as api from './api'
 
 export const chapterKeys = {
@@ -19,12 +26,34 @@ export const useChapterList = (slug: string, page: number, order: ChapterOrder) 
     placeholderData: keepPreviousData,
   })
 
-/** Một chương cho trang đọc */
-export const useChapter = (slug: string, number: number) =>
-  useQuery({
+/**
+ * Query một chương cho trang đọc, qua kho trên máy (features/offline). networkMode 'always': mặc
+ * định TanStack Query dừng query khi máy offline, trang đọc sẽ kẹt ở khung chờ dù chương đã lưu.
+ */
+export const chapterQuery = (queryClient: QueryClient, slug: string, number: number) =>
+  queryOptions({
     queryKey: chapterKeys.detail(slug, number),
-    queryFn: () => api.getChapter(slug, number),
+    queryFn: async () => {
+      // Bản trên máy chủ có thể về trước khi truy vấn trả bản lưu: khi đó trả luôn bản mới, vì ghi
+      // cache lúc truy vấn chưa xong sẽ bị bản lưu đè lại
+      let settled = false
+      let early: { chapter: ChapterContent | null } | undefined
+      const saved = await readChapter(slug, number, (fresh) => {
+        if (settled) queryClient.setQueryData(chapterKeys.detail(slug, number), fresh)
+        else early = { chapter: fresh }
+      })
+      settled = true
+      return early ? early.chapter : saved
+    },
+    networkMode: 'always',
+    // Chưa lưu mà mất mạng: báo ngay, thử lại cũng vậy
+    retry: (count, error) => !(error instanceof ChapterNotSavedError) && count < 3,
   })
+
+export function useChapter(slug: string, number: number) {
+  const queryClient = useQueryClient()
+  return useQuery(chapterQuery(queryClient, slug, number))
+}
 
 /** Tính 1 lượt đọc khi mở chương */
 export function useRecordChapterView(slug: string, number: number | undefined) {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { AppState } from 'react-native'
 import { useSaveReadingProgress } from '@/features/library/hooks'
+import { markRead } from '@/features/offline/store'
 import type { ChapterContent } from '@/types/chapter'
 
 const SAVE_EVERY_MS = 1000
@@ -11,7 +12,7 @@ export const MIN_RESUME = 0.03
  * Như useReadingTracker của web: ghi chương vào lịch sử khi mở, lưu vị trí cuộn (tối đa mỗi giây khi
  * đang cuộn, khi rời chương và khi app vào nền). Khác web: `getProgress` do trang đọc tính từ
  * ScrollView (không có DOM); việc cuộn tới chỗ đọc dở (`?resume=`) làm ở trang đọc, cần số đo của
- * ScrollView. Bản lưu chương trên máy (markRead) thêm ở bước 3.
+ * ScrollView.
  * Trả về hàm gọi mỗi lần cuộn.
  */
 export function useReadingTracker(
@@ -33,6 +34,7 @@ export function useReadingTracker(
   useEffect(() => {
     if (slug === undefined || number === undefined || title === undefined) return
     save({ slug, chapter: number, chapterTitle: title })
+    void markRead(slug, number).catch(() => {})
   }, [save, slug, number, title])
 
   useEffect(() => {
@@ -47,6 +49,8 @@ export function useReadingTracker(
       const progress = progressRef.current()
       if (progress === null) return
       save({ slug, chapter: number, chapterTitle: title, progress })
+      // Bản lưu trên máy nhớ chỗ đọc để "Đọc tiếp" ở tab Đã lưu (cả khi offline)
+      void markRead(slug, number, progress).catch(() => {})
     }
     touchRef.current = () => {
       dirty = true

@@ -6,8 +6,15 @@ import { Input } from '@/components/ui/input'
 import { Text } from '@/components/ui/text'
 import { links } from '@/lib/links'
 
+type Props = {
+  slug: string
+  max: number
+  /** Mở chương theo cách khác (trang đọc thay màn hiện tại); mặc định mở thêm màn đọc */
+  onJump?: (number: number) => void
+}
+
 /** Như JumpToChapter của web: nhập số chương rồi mở trang đọc */
-export function JumpToChapter({ slug, max }: { slug: string; max: number }) {
+export function JumpToChapter({ slug, max, onJump }: Props) {
   const [value, setValue] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -17,7 +24,8 @@ export function JumpToChapter({ slug, max }: { slug: string; max: number }) {
       setError(`Nhập số chương từ 1 đến ${max}`)
       return
     }
-    router.push(links.chapter(slug, n))
+    if (onJump) onJump(n)
+    else router.push(links.chapter(slug, n))
   }
 
   return (

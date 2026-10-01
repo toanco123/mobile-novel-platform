@@ -7,7 +7,7 @@ Bước 2 của `plan-app-di-dong.md`, chia nhỏ theo yêu cầu của người
 |---|---|---|
 | **2a** | Trang chủ | ✅ (01/10/2026) |
 | **2b** | Chi tiết truyện: thông tin, mục lục, theo dõi, đọc tiếp | đã viết code, còn kiểm trên máy ảo |
-| **2c** | Trang đọc từng chương: nội dung, cài đặt đọc, chương trước/sau, lịch sử và lượt đọc | chưa làm |
+| **2c** | Trang đọc từng chương: nội dung, cài đặt đọc, chương trước/sau, lịch sử và lượt đọc | đã viết code, còn kiểm trên máy ảo |
 
 Ngoài bước 2: cuộn liên tục, tự cuộn, nghe truyện (bước 5); bình luận, chấm điểm (bước 4); đọc offline (bước 3).
 
@@ -68,4 +68,24 @@ Như `StoryDetailPage` của web, một cột cuộn dọc (như web ở màn h�
 - **Còn kiểm** (người dùng tạm hoãn kiểm trên máy ảo): danh sách chương (Cũ nhất/Mới nhất, phân trang, đi tới chương, nhãn Đang đọc/Mới), "Xem thêm"/"Thu gọn", Cùng tác giả/Cùng thể loại, truyện chưa đọc, truyện nháp, truyện chưa có chương, không tìm thấy truyện, theme sáng, màn nhỏ. Lúc này bấm/vuốt trên simulator không được vì VS Code mất quyền Accessibility; cuộn để chụp thì nạp tạm `contentOffset` cho ScrollView.
 
 ## 2c. Trang đọc
-(Viết chi tiết khi bắt đầu 2c.)
+Như `ChapterReaderPage` của web ở chế độ **từng chương**, route `story/[slug]/[chapter]` (`chapter-N` như web):
+
+| Phần | Web | App |
+|---|---|---|
+| Nội dung | `ChapterArticle`: `parseContent` → đoạn, tiêu đề, danh sách; chữ đậm/nghiêng/gạch | Như web, render bằng `Text` lồng nhau (không bao giờ render HTML). Đầu chương: tên truyện, "Chương N", tên chương, ngày đăng, số chữ, số phút đọc, hoa văn. Dấu đầu dòng danh sách tự tính (`listMarker`, có test). Bỏ chữ hoa đầu chương (React Native không có float) |
+| Thanh công cụ | `ReaderToolbar`: tự ẩn khi cuộn xuống, hiện khi cuộn lên / chạm chữ | Như web: nút quay lại, tên truyện + chương, Mục lục, Cài đặt. Header điều hướng ẩn; dải nền giữ chỗ tai thỏ để chữ không chạy dưới thanh trạng thái |
+| Thanh tiến độ | `ReadingProgress` | Vạch mỏng dưới thanh trạng thái, `Animated` (không render lại khi cuộn) |
+| Cài đặt đọc | `ReaderSettingsPanel` (bảng dưới, lớp phủ trong suốt) | Màu nền (Theo app, Trắng, Giấy vàng, Xám, Đen), phông có chân / không chân, cỡ chữ 15–28, giãn dòng 1,5–2,3 (nút − / + thay thanh trượt), Đặt lại. Store `useReaderSettings` chép nguyên từ web (key `reader-settings`) |
+| Màu nền đọc | class `reader-tone-*` ghi đè token | 4 theme phụ của Uniwind (`reader-white`...) khai báo trong `global.css` + `extraThemes`, bọc vùng đọc bằng `ScopedTheme`: mọi class token và `useThemeColors()` bên trong tự đổi màu |
+| Mục lục | `ReaderChapterIndex` (bảng bên phải) | Bảng dưới: chọn khoảng 50 chương, ô "Đi tới", danh sách mở sẵn tới chương đang đọc |
+| Chuyển chương | `ChapterNav` đầu + cuối, `ChapterEnd` | Như web. Chuyển chương bằng `router.replace` để nút quay lại về thẳng trang trước khi đọc (không đi lùi qua từng chương) |
+| Lịch sử, lượt đọc | `useReadingTracker`, `useRecordChapterView` | Như web: ghi chương khi mở, lưu vị trí cuộn tối đa mỗi giây và khi rời chương / app vào nền (`AppState`); `?resume=` thì cuộn tới chỗ đọc dở + `ResumeNotice` ("Về đầu chương"). Tính tỉ lệ đọc bằng hàm thuần (`progress.ts`, có test) |
+| Màn hình | | Giữ màn hình sáng khi đang đọc (`expo-keep-awake`); thanh trạng thái sáng/tối theo màu nền đọc |
+
+- **Chưa làm ở 2c:** cuộn liên tục, tự cuộn, nghe truyện (bước 5); bình luận chương, báo lỗi chương (bước 4); đọc chương đã lưu khi offline (bước 3); độ rộng khung chữ (điện thoại luôn hết chiều ngang); phím ← → (không có trên điện thoại).
+- Người dùng bảo không chạy máy ảo ở phần này (01/10/2026): kiểm bằng typecheck, lint, test; kiểm giao diện trên máy ảo để sau.
+
+**Tiến độ 2c (01/10/2026):**
+- Code xong: `src/app/story/[slug]/[chapter].tsx`; `features/reader/` (useReaderSettings, readerOptions, text, progress, listMarker, useReadingTracker, useAutoHideToolbar, navigation, components/: ChapterArticle, ChapterNav, ChapterEnd, ReaderToolbar, ReaderChapterIndex, ReaderSettingsPanel, ResumeNotice); `components/common/BottomPanel.tsx`; `useChapter`, `useRecordChapterView` trong `chapters/hooks.ts`; 4 theme phụ trong `global.css` + `extraThemes` (metro.config.js) + `--theme` (lệnh typecheck); font Be Vietnam Pro nghiêng cho phông không chân.
+- Đã kiểm: typecheck, lint (0 cảnh báo), 48 test (thêm test cho `progress.ts`, `listMarker.ts`, số chữ khớp `toLocaleString('vi-VN')`), đóng gói iOS bằng `expo export` (có đủ 4 theme và font mới).
+- **Còn kiểm trên máy ảo** (cả 2b): nội dung chương với mọi kiểu khối (đoạn, tiêu đề, danh sách, đậm/nghiêng/gạch), đổi màu nền / phông / cỡ chữ / giãn dòng, thanh công cụ tự ẩn và chạm chữ để hiện, thanh tiến độ, mở lại chỗ đọc dở (`?resume=`) + "Về đầu chương", mục lục (mở sẵn chương đang đọc, chọn khoảng, đi tới), chuyển chương bằng `router.replace`, lịch sử đọc lưu khi cuộn / rời chương / app vào nền, màn tai thỏ và màn nhỏ.

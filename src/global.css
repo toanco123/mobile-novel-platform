@@ -14,6 +14,9 @@
   --font-sans-medium: 'BeVietnamPro_500Medium';
   --font-sans-semibold: 'BeVietnamPro_600SemiBold';
   --font-sans-bold: 'BeVietnamPro_700Bold';
+  /* Chữ nghiêng, đậm trong nội dung chương khi chọn phông không chân */
+  --font-sans-italic: 'BeVietnamPro_400Regular_Italic';
+  --font-sans-semibold-italic: 'BeVietnamPro_600SemiBold_Italic';
   --font-heading: 'CormorantGaramond_600SemiBold';
   --font-heading-bold: 'CormorantGaramond_700Bold';
   --font-heading-italic: 'CormorantGaramond_600SemiBold_Italic';
@@ -79,6 +82,111 @@
       --color-input: #f4e7ed1f;
       --color-ring: #ff3d8b;
       --color-rose-gold: #d9a68f;
+      --color-neon: #ff3d8b;
+      --color-wine: #7a1f3d;
+    }
+
+    /*
+     * Màu nền trang đọc (reader-tone-* của web): theme phụ, chỉ dùng trong vùng đọc qua <ScopedTheme>
+     * (khai báo ở extraThemes của metro.config.js). Biến web không ghi đè (neon, wine...) lấy theo
+     * theme sáng (Trắng, Giấy vàng) hoặc tối (Xám, Đen) như color-scheme của web.
+     */
+    /* Trắng */
+    @variant reader-white {
+      --color-background: #fdfbf8;
+      --color-foreground: #2a1a22;
+      --color-card: #ffffff;
+      --color-card-foreground: #2a1a22;
+      --color-popover: #ffffff;
+      --color-popover-foreground: #2a1a22;
+      --color-primary: #b0144f;
+      --color-primary-foreground: #ffffff;
+      --color-secondary: #f2ece8;
+      --color-secondary-foreground: #2a1a22;
+      --color-muted: #f2ece8;
+      --color-muted-foreground: #6f6068;
+      --color-accent: #f0e4e4;
+      --color-accent-foreground: #2a1a22;
+      --color-destructive: #c62828;
+      --color-border: #e8dfda;
+      --color-input: #ddd2cc;
+      --color-ring: #b0144f;
+      --color-rose-gold: #9a5a43;
+      --color-neon: #d6106a;
+      --color-wine: #7a1f3d;
+    }
+
+    /* Giấy vàng */
+    @variant reader-paper {
+      --color-background: #f4ead3;
+      --color-foreground: #3a2b1d;
+      --color-card: #f9f1dd;
+      --color-card-foreground: #3a2b1d;
+      --color-popover: #f9f1dd;
+      --color-popover-foreground: #3a2b1d;
+      --color-primary: #9b2c47;
+      --color-primary-foreground: #ffffff;
+      --color-secondary: #eadcbd;
+      --color-secondary-foreground: #3a2b1d;
+      --color-muted: #ebdfc3;
+      --color-muted-foreground: #6c5843;
+      --color-accent: #e8d6b6;
+      --color-accent-foreground: #3a2b1d;
+      --color-destructive: #c62828;
+      --color-border: #dfcda8;
+      --color-input: #d5c29c;
+      --color-ring: #9b2c47;
+      --color-rose-gold: #8a5236;
+      --color-neon: #d6106a;
+      --color-wine: #7a1f3d;
+    }
+
+    /* Xám */
+    @variant reader-gray {
+      --color-background: #38363a;
+      --color-foreground: #e6e1dd;
+      --color-card: #424044;
+      --color-card-foreground: #e6e1dd;
+      --color-popover: #424044;
+      --color-popover-foreground: #e6e1dd;
+      --color-primary: #ff82ad;
+      --color-primary-foreground: #2a1a22;
+      --color-secondary: #4a474c;
+      --color-secondary-foreground: #e6e1dd;
+      --color-muted: #464349;
+      --color-muted-foreground: #b7afab;
+      --color-accent: #514b52;
+      --color-accent-foreground: #e6e1dd;
+      --color-destructive: #ff6b6b;
+      --color-border: #ffffff1f;
+      --color-input: #ffffff29;
+      --color-ring: #ff82ad;
+      --color-rose-gold: #dcb29d;
+      --color-neon: #ff3d8b;
+      --color-wine: #7a1f3d;
+    }
+
+    /* Đen */
+    @variant reader-black {
+      --color-background: #000000;
+      --color-foreground: #cbc3c6;
+      --color-card: #121012;
+      --color-card-foreground: #cbc3c6;
+      --color-popover: #121012;
+      --color-popover-foreground: #cbc3c6;
+      --color-primary: #e8578f;
+      --color-primary-foreground: #000000;
+      --color-secondary: #1c191c;
+      --color-secondary-foreground: #cbc3c6;
+      --color-muted: #1a171a;
+      --color-muted-foreground: #8e8589;
+      --color-accent: #251e23;
+      --color-accent-foreground: #cbc3c6;
+      --color-destructive: #ff6b6b;
+      --color-border: #ffffff1a;
+      --color-input: #ffffff24;
+      --color-ring: #e8578f;
+      --color-rose-gold: #b88d79;
       --color-neon: #ff3d8b;
       --color-wine: #7a1f3d;
     }

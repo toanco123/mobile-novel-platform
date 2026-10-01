@@ -7,7 +7,7 @@
 const round1 = (value: number) => Math.round(Number((value * 10).toPrecision(12))) / 10
 
 /** Số kiểu Việt Nam, tối đa 1 chữ số lẻ: 1024.5 → "1.024,5" (như Intl.NumberFormat('vi-VN')) */
-function formatDecimal(value: number) {
+export function formatDecimal(value: number) {
   const rounded = round1(Math.abs(value))
   const [int, frac] = rounded.toFixed(1).split('.')
   const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.')

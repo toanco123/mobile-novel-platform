@@ -1,6 +1,6 @@
 // format.ts của app tự tính (Hermes thiếu Intl). Test chạy trên Node có Intl đầy đủ (ICU như trình
 // duyệt) và so từng kết quả với cách web tính, để app hiện số, thời gian giống hệt web.
-import { formatBytes, formatCount, formatRelativeTime } from './format'
+import { formatBytes, formatCount, formatDecimal, formatRelativeTime } from './format'
 
 const compact = new Intl.NumberFormat('vi-VN', { notation: 'compact', maximumFractionDigits: 1 })
 const rtf = new Intl.RelativeTimeFormat('vi-VN', { numeric: 'auto' })
@@ -54,4 +54,12 @@ test('formatBytes giống web', () => {
   for (let b = 0; b < 50 * 1024 * 1024; b = Math.max(b + 1, Math.round(b * 1.13))) {
     expect(formatBytes(b), String(b)).toBe(webBytes(b))
   }
+})
+
+describe('formatDecimal (số chữ của chương: toLocaleString vi-VN ở web)', () => {
+  it('khớp Intl với số nguyên', () => {
+    for (const n of [0, 7, 999, 1000, 1024, 12_345, 999_999, 1_000_000, 123_456_789]) {
+      expect(formatDecimal(n)).toBe(n.toLocaleString('vi-VN'))
+    }
+  })
 })

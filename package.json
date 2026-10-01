@@ -1,13 +1,13 @@
 {
   "name": "mobile-novel-platform",
   "main": "expo-router/entry",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": true,
   "scripts": {
     "start": "expo start",
     "ios": "expo start --ios",
     "android": "expo start --android",
-    "typecheck": "uniwind generate-artifacts --css ./src/global.css --dts ./src/uniwind-types.d.ts && tsc --noEmit",
+    "typecheck": "uniwind generate-artifacts --css ./src/global.css --dts ./src/uniwind-types.d.ts --theme reader-white --theme reader-paper --theme reader-gray --theme reader-black && tsc --noEmit",
     "lint": "oxlint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

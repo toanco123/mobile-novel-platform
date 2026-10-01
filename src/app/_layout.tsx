@@ -1,18 +1,59 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import '@/global.css'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { useFonts } from 'expo-font'
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router'
+import * as SplashScreen from 'expo-splash-screen'
+import { StatusBar } from 'expo-status-bar'
+import { useEffect } from 'react'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { Toaster } from 'sonner-native'
+import { useTheme } from '@/hooks/useTheme'
+import { useThemeColors } from '@/hooks/useThemeColors'
+import { fonts } from '@/lib/fonts'
+import { queryClient } from '@/lib/queryClient'
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+SplashScreen.preventAutoHideAsync()
 
-SplashScreen.preventAutoHideAsync();
+/** Màu nền, header... của thư viện điều hướng lấy theo token của theme hiện tại */
+function useNavigationTheme() {
+  const theme = useTheme((s) => s.theme)
+  const colors = useThemeColors()
+  const base = theme === 'dark' ? DarkTheme : DefaultTheme
+  return {
+    ...base,
+    colors: {
+      ...base.colors,
+      background: colors.background,
+      card: colors.background,
+      text: colors.foreground,
+      border: colors.border,
+      primary: colors.primary,
+      notification: colors.primary,
+    },
+  }
+}
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts(fonts)
+  const theme = useTheme((s) => s.theme)
+  const navigationTheme = useNavigationTheme()
+  const ready = fontsLoaded || !!fontError
+
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync()
+  }, [ready])
+
+  if (!ready) return null
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
-  );
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider value={navigationTheme}>
+          <Stack screenOptions={{ headerShown: false }} />
+          <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+          <Toaster position="bottom-center" />
+        </ThemeProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
+  )
 }

@@ -1,0 +1,54 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Tổng quan
+
+App di động (iOS/Android) đọc **truyện chữ** cho **người đọc** của web `../web-novel-platform` (cùng backend **Supabase**). Expo SDK 57 + React Native 0.86 + React 19 + TypeScript, Expo Router, Uniwind (Tailwind v4). Sáng tác và Quản trị chỉ có ở web.
+
+Plan tổng (công nghệ, code chép từ web, màn hình, lộ trình) ở [documents/plan-app-di-dong.md](documents/plan-app-di-dong.md): đọc trước khi làm tính năng mới, xong một bước thì đánh dấu tiến độ ở đó. Người dùng giao tiếp bằng tiếng Việt; tài liệu viết bằng tiếng Việt. Nghiệp vụ (luật duyệt truyện, giới hạn, schema) mô tả ở `../web-novel-platform/CLAUDE.md` và `../web-novel-platform/documents/thiet-ke-database.md`.
+
+## Lệnh
+
+```bash
+npm run ios            # Metro + mở app trên iOS Simulator bằng Expo Go
+npm start              # chỉ Metro (quét QR bằng Expo Go trên điện thoại)
+npm run typecheck      # sinh kiểu Uniwind (src/uniwind-types.d.ts) rồi tsc --noEmit
+npm run lint           # oxlint
+npm run format         # prettier --write . (có plugin sắp xếp class Tailwind)
+npm test               # vitest run: chỉ logic thuần (không import react-native)
+npx vitest run src/lib/slugify.test.ts   # chạy 1 file test
+npx expo export --platform ios --output-dir <thư mục tạm>   # đóng gói thật, bắt lỗi Metro/Uniwind
+npm run gen:types      # sinh lại src/types/database.ts từ Supabase (cần `supabase login`)
+npx expo install <gói> # cài thư viện: luôn dùng lệnh này để lấy bản hợp với SDK
+```
+
+## Kiến trúc
+
+- **Route**: Expo Router, gốc là `src/app/`. Mọi file trong đó là một màn hình (hoặc `_layout`), nên Providers, hook, component đặt ngoài `src/app/`. Màn hình chỉ mỏng; logic nằm ở `src/features/<x>/`. Đường dẫn đặt giống web (`story/[slug]`, `genres/[slug]`, `search`...) để deep link khớp với link web; URL lấy từ `paths` (`src/lib/routes.ts`, chép từ web).
+- **Layout gốc** `src/app/_layout.tsx`: nạp font (`src/lib/fonts.ts`), giữ splash tới khi xong, `QueryClientProvider`, theme điều hướng lấy màu từ token, `Toaster` (sonner-native). Tab chính ở `src/app/(tabs)/` (Trang chủ, Khám phá, Tủ truyện, Tài khoản).
+- **Dữ liệu (quan trọng)**: component không gọi Supabase trực tiếp. Mọi lấy/ghi đi qua `features/<x>/api.ts`, bọc bằng hook TanStack Query trong `features/<x>/hooks.ts`. Query key giống web. App **không có bản dữ liệu giả**: `api.ts` của app = `api.remote.ts` của web chép sang (+ `export * from './shared'`), thiếu `.env` thì app báo lỗi ngay khi mở.
+- **Code chép từ web**: `types/`, `lib/` (slugify, dbError, dbPage, uuid, format, pagination, routes), `config/site.ts`, `shared.ts`/`schemas.ts`/`api.ts` của 7 feature người đọc. Dòng đầu file ghi nguồn. Bảng "chép gì, sửa gì" ở mục 3 của plan. Khi web sửa các file này thì sửa theo ở app; thay đổi DB chỉ làm ở web (skill `db-migration` bên web), rồi `npm run gen:types` ở app.
+- **Khác web cần nhớ**:
+  - Lưu trên máy: `localStorage` của expo-sqlite (`import 'expo-sqlite/localStorage/install'`), bọc bởi `readLocal`/`writeLocal` (`src/lib/localStore.ts`, thay `mockStorage` của web). Zustand persist và phiên supabase-js dùng chung kho này.
+  - Mạng: `isOnline()`/`isNetworkError()` ở `src/lib/network.ts` lấy từ NetInfo (không có `navigator.onLine`); `onlineManager` của TanStack Query nối NetInfo ở `src/lib/queryClient.ts`.
+  - Đăng nhập: link xác nhận email, đặt lại mật khẩu và OAuth quay về **app** qua deep link (`webtruyen://...`, Expo Go là `exp://...`), vì mã PKCE chỉ đổi được trên máy đã gửi. Màn hình nhận deep link gọi `completeAuthRedirect(url)`. Redirect URLs phải khai báo trên Supabase (mục 6 của plan).
+  - Nội dung chương: `features/chapters/richText.ts` đọc HTML bằng htmlparser2 (web dùng DOMParser). Test của web chạy nguyên văn để bảo đảm hai bản giống nhau. Không bao giờ render HTML thô (không dùng WebView cho nội dung chương).
+- **State client**: Zustand. Theme ở `src/hooks/useTheme.ts` (key `theme`, mặc định tối, gọi `Uniwind.setTheme`). Dữ liệu server luôn ở TanStack Query.
+
+## Giao diện
+
+- **Style**: Uniwind, viết `className` như web. Token màu, font, bo góc ở `src/global.css` (chép từ `index.css` của web): `bg-background`, `text-foreground`, `text-muted-foreground`, `bg-primary`, `text-rose-gold`, `text-neon`... Bộ màu sáng/tối khai báo bằng `@variant light` / `@variant dark`; mọi biến phải có ở cả hai.
+- **Màu ở chỗ không nhận className** (thanh tab, header điều hướng, màu icon lucide): `useThemeColors()` (`src/hooks/useThemeColors.ts`).
+- **Font**: React Native không tự chọn file theo độ đậm. Dùng class họ chữ theo độ đậm: `font-sans`, `font-sans-medium`, `font-sans-semibold`, `font-sans-bold`, `font-heading`, `font-heading-bold`, `font-script` (logo), `font-reading` (+ `-italic`, `-bold`, `-bold-italic`). Không dùng `font-semibold`/`font-bold` với font tự nạp. Mọi `<Text>` phải có class font (React Native không kế thừa font từ View cha). Font mới: import theo đường dẫn con (`@expo-google-fonts/<họ>/<độ đậm>`) trong `src/lib/fonts.ts` rồi thêm `--font-*` vào `global.css`.
+- `src/uniwind-types.d.ts` là file sinh ra (Metro hoặc `npm run typecheck` tạo lại), được commit để `tsc` chạy được ngay.
+- Kiểm tra UI trên simulator ở màn nhỏ (iPhone 17e), lớn (iPhone 17 Pro Max) và cả hai theme. Chụp màn hình: `xcrun simctl io booted screenshot <file>`.
+
+## Quy ước
+
+- Chữ trên giao diện, tài liệu, commit message bằng tiếng Việt; tên nhánh git tiếng Anh (kebab-case).
+- **Mỗi lần commit là một lần tăng version** trong `package.json` như web: `npm version patch --no-git-tag-version` rồi đưa `package.json` + `package-lock.json` vào chính commit đó. `expo.version` trong `app.json` là version phát hành trên store, chỉ tăng khi phát hành.
+- Import alias `@/` → `src/`. Tên app lấy từ `SITE_NAME` (`src/config/site.ts`).
+- Prettier: không dấu chấm phẩy, nháy đơn, `printWidth` 100.
+- Env: chỉ `EXPO_PUBLIC_*` (đóng gói vào app, nên chỉ giá trị công khai). `.env` không lên git, mẫu ở `.env.example`; khai báo kiểu ở `src/env.d.ts`.
+- Test: Vitest chỉ cho logic thuần (file `*.test.ts` trong `src/`), không import module của React Native. Logic chép từ web thì chép kèm test của web.

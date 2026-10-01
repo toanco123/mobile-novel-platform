@@ -1,0 +1,98 @@
+import { z } from 'zod'
+
+const email = z
+  .string()
+  .trim()
+  .min(1, 'Nhập email của bạn')
+  .pipe(z.email('Nhập email hợp lệ, ví dụ ten@gmail.com'))
+
+const newPassword = z
+  .string()
+  .min(8, 'Mật khẩu cần ít nhất 8 ký tự')
+  .regex(/\p{L}/u, 'Mật khẩu cần có ít nhất một chữ cái')
+  .regex(/\d/, 'Mật khẩu cần có ít nhất một chữ số')
+
+const passwordsMatch = (d: { password: string; confirmPassword: string }) =>
+  d.password === d.confirmPassword
+const mismatch = { path: ['confirmPassword'], message: 'Mật khẩu nhập lại không khớp' }
+
+const displayName = z
+  .string()
+  .trim()
+  .min(2, 'Tên hiển thị cần ít nhất 2 ký tự')
+  .max(30, 'Tên hiển thị tối đa 30 ký tự')
+
+export const loginSchema = z.object({
+  email,
+  password: z.string().min(1, 'Nhập mật khẩu'),
+})
+
+export const registerSchema = z
+  .object({
+    displayName,
+    email,
+    password: newPassword,
+    confirmPassword: z.string().min(1, 'Nhập lại mật khẩu'),
+    acceptTerms: z.boolean().refine((v) => v, 'Bạn cần đồng ý với điều khoản để tạo tài khoản'),
+  })
+  .refine(passwordsMatch, mismatch)
+
+export const forgotPasswordSchema = z.object({ email })
+
+export const resetPasswordSchema = z
+  .object({
+    password: newPassword,
+    confirmPassword: z.string().min(1, 'Nhập lại mật khẩu'),
+  })
+  .refine(passwordsMatch, mismatch)
+
+export const profileSchema = z.object({ displayName })
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Nhập mật khẩu hiện tại'),
+    password: newPassword,
+    confirmPassword: z.string().min(1, 'Nhập lại mật khẩu mới'),
+  })
+  .refine(passwordsMatch, mismatch)
+  .refine((d) => d.password !== d.currentPassword, {
+    path: ['password'],
+    message: 'Mật khẩu mới cần khác mật khẩu hiện tại',
+  })
+
+export type LoginValues = z.infer<typeof loginSchema>
+export type RegisterValues = z.infer<typeof registerSchema>
+export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>
+export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>
+export type ProfileValues = z.infer<typeof profileSchema>
+export type ChangePasswordValues = z.infer<typeof changePasswordSchema>
+
+/** 0: chưa nhập, 1: yếu, 2: tạm được, 3: mạnh */
+export function passwordStrength(password: string): 0 | 1 | 2 | 3 {
+  if (!password) return 0
+  let score = 0
+  if (password.length >= 8) score++
+  if (/\p{L}/u.test(password) && /\d/.test(password)) score++
+  if (password.length >= 12 || /[^\p{L}\d]/u.test(password)) score++
+  return Math.max(1, score) as 1 | 2 | 3
+}
+
+/**
+ * Xác nhận xóa tài khoản: tài khoản email nhập mật khẩu; tài khoản Google/Facebook (không có mật
+ * khẩu) gõ lại email của mình
+ */
+export const deleteAccountSchema = (user: { email: string; provider: string }) =>
+  user.provider === 'email'
+    ? z.object({ password: z.string().min(1, 'Nhập mật khẩu để xác nhận'), confirm: z.string() })
+    : z.object({
+        password: z.string(),
+        confirm: z
+          .string()
+          .trim()
+          .refine(
+            (v) => v.toLowerCase() === user.email.toLowerCase(),
+            'Email nhập vào chưa khớp với tài khoản',
+          ),
+      })
+
+export type DeleteAccountValues = { password: string; confirm: string }

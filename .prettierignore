@@ -1,0 +1,9 @@
+node_modules
+package-lock.json
+documents
+src/types/database.ts
+src/uniwind-types.d.ts
+.expo
+ios
+android
+assets/expo.icon

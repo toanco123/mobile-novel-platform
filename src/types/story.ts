@@ -1,0 +1,56 @@
+export type Genre = {
+  slug: string
+  name: string
+  description?: string
+  /** null/undefined: thể loại có sẵn của hệ thống */
+  createdBy?: { id: string; displayName: string } | null
+}
+
+export type Author = {
+  slug: string
+  name: string
+}
+
+export type StoryStatus = 'ongoing' | 'completed'
+
+export type StoryVisibility = 'draft' | 'published'
+
+/** Trạng thái duyệt: truyện của tác giả chỉ công khai được sau khi quản trị viên duyệt */
+export type ReviewStatus = 'pending' | 'approved' | 'rejected'
+
+export type StoryReview = {
+  status: ReviewStatus
+  /** Lần gửi duyệt gần nhất */
+  submittedAt: string | null
+  /** Lúc quản trị viên duyệt / từ chối */
+  reviewedAt: string | null
+  /** Lý do từ chối (chỉ khi rejected) */
+  reason: string | null
+}
+
+/** Danh sách truyện chọn tay trên trang chủ: banner nổi bật | truyện đề cử */
+export type CuratedList = 'featured' | 'editor_pick'
+
+export type Story = {
+  id: string
+  slug: string
+  title: string
+  author: Author
+  genres: Genre[]
+  status: StoryStatus
+  description: string
+  coverUrl: string | null
+  chapterCount: number
+  viewCount: number
+  ratingAvg: number
+  ratingCount: number
+  /** null khi truyện chưa có chương nào được xuất bản */
+  firstChapterNumber: number | null
+  /** null khi truyện chưa có chương nào được xuất bản */
+  latestChapter: { number: number; title: string } | null
+  /** null: truyện có sẵn của hệ thống; có giá trị: truyện do người dùng đăng */
+  ownerId: string | null
+  visibility: StoryVisibility
+  createdAt: string
+  updatedAt: string
+}

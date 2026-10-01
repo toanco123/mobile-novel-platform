@@ -1,9 +1,85 @@
-:root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
-    Segoe UI Symbol, Noto Color Emoji;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
-  --font-serif: Georgia, 'Times New Roman', serif;
+@import 'tailwindcss';
+@import 'uniwind';
+
+/*
+ * Hệ thiết kế chép từ web (web-novel-platform/src/index.css): cùng tên token (bg-background,
+ * text-muted-foreground, text-rose-gold...) và cùng mã màu. Màu viết dạng hex; màu trong suốt của web
+ * (rgb(... / 14%)) đổi sang hex 8 chữ số.
+ *
+ * Font: React Native không tự chọn file theo độ đậm, nên mỗi độ đậm là một họ chữ riêng (đã nạp ở
+ * src/lib/fonts.ts). Dùng font-sans-semibold thay cho font-sans + font-semibold.
+ */
+@theme {
+  --font-sans: 'BeVietnamPro_400Regular';
+  --font-sans-medium: 'BeVietnamPro_500Medium';
+  --font-sans-semibold: 'BeVietnamPro_600SemiBold';
+  --font-sans-bold: 'BeVietnamPro_700Bold';
+  --font-heading: 'CormorantGaramond_600SemiBold';
+  --font-heading-bold: 'CormorantGaramond_700Bold';
+  --font-script: 'GreatVibes_400Regular';
+  --font-reading: 'Literata_400Regular';
+  --font-reading-italic: 'Literata_400Regular_Italic';
+  --font-reading-bold: 'Literata_700Bold';
+  --font-reading-bold-italic: 'Literata_700Bold_Italic';
+
+  /* --radius của web = 0.75rem */
+  --radius-sm: 0.45rem;
+  --radius-md: 0.6rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1.05rem;
+  --radius-2xl: 1.35rem;
+}
+
+@layer theme {
+  :root {
+    /* Light: giấy hồng nhạt, chữ tím mận */
+    @variant light {
+      --color-background: #fbf4f6;
+      --color-foreground: #2a1530;
+      --color-card: #ffffff;
+      --color-card-foreground: #2a1530;
+      --color-popover: #ffffff;
+      --color-popover-foreground: #2a1530;
+      --color-primary: #b0144f;
+      --color-primary-foreground: #ffffff;
+      --color-secondary: #f3e3ea;
+      --color-secondary-foreground: #4a1a33;
+      --color-muted: #f3e8ec;
+      --color-muted-foreground: #6e5563;
+      --color-accent: #f6dde6;
+      --color-accent-foreground: #5a1030;
+      --color-destructive: #c62828;
+      --color-border: #ead7df;
+      --color-input: #e2cbd5;
+      --color-ring: #b0144f;
+      --color-rose-gold: #9a5a43;
+      --color-neon: #d6106a;
+      --color-wine: #7a1f3d;
+    }
+
+    /* Dark (mặc định): tím mận nửa đêm, burgundy, vàng hồng, hồng neon */
+    @variant dark {
+      --color-background: #1a0f1d;
+      --color-foreground: #f4e7ed;
+      --color-card: #24152a;
+      --color-card-foreground: #f4e7ed;
+      --color-popover: #24152a;
+      --color-popover-foreground: #f4e7ed;
+      --color-primary: #ff3d8b;
+      --color-primary-foreground: #1a0f1d;
+      --color-secondary: #3a1b2e;
+      --color-secondary-foreground: #f4e7ed;
+      --color-muted: #2a1830;
+      --color-muted-foreground: #b9a0ad;
+      --color-accent: #4a1d35;
+      --color-accent-foreground: #f4e7ed;
+      --color-destructive: #ff6b6b;
+      --color-border: #d9a68f24;
+      --color-input: #f4e7ed1f;
+      --color-ring: #ff3d8b;
+      --color-rose-gold: #d9a68f;
+      --color-neon: #ff3d8b;
+      --color-wine: #7a1f3d;
+    }
+  }
 }

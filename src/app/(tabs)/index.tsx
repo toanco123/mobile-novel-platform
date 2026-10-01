@@ -1,23 +1,43 @@
-import { Text } from 'react-native'
-import { PlaceholderScreen } from '@/components/common/PlaceholderScreen'
-import { SITE_NAME } from '@/config/site'
-import { useGenres } from '@/features/genres/hooks'
+import { useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+import { RefreshControl, ScrollView } from 'react-native'
+import { ContinueReading } from '@/features/library/components/ContinueReading'
+import { EditorPicks } from '@/features/stories/sections/EditorPicks'
+import { HeroShowcase } from '@/features/stories/sections/HeroShowcase'
+import { LatestUpdates } from '@/features/stories/sections/LatestUpdates'
+import { NewReleases } from '@/features/stories/sections/NewReleases'
+import { TrendingWeekly } from '@/features/stories/sections/TrendingWeekly'
+import { useThemeColors } from '@/hooks/useThemeColors'
 
+/** Trang chủ (HomePage của web, một cột); khối Thể loại thêm ở bước 4 */
 export default function HomeScreen() {
-  // Tạm thời: gọi thử Supabase để thấy bộ khung đã nối đúng máy chủ
-  const genres = useGenres()
+  const queryClient = useQueryClient()
+  const colors = useThemeColors()
+  const [refreshing, setRefreshing] = useState(false)
+
+  async function refresh() {
+    setRefreshing(true)
+    await Promise.all([
+      queryClient.refetchQueries({ queryKey: ['stories'], type: 'active' }),
+      queryClient.refetchQueries({ queryKey: ['library'], type: 'active' }),
+    ])
+    setRefreshing(false)
+  }
+
   return (
-    <PlaceholderScreen
-      title={SITE_NAME}
-      description="Banner nổi bật, đề cử, top tuần, mới cập nhật (bước 2 của plan)."
+    <ScrollView
+      className="flex-1 bg-background"
+      contentContainerClassName="pb-12"
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />
+      }
     >
-      <Text className="font-sans text-sm text-rose-gold">
-        {genres.isPending
-          ? 'Đang kết nối máy chủ…'
-          : genres.isError
-            ? `Lỗi kết nối: ${genres.error.message}`
-            : `Đã kết nối máy chủ · ${genres.data.length} thể loại`}
-      </Text>
-    </PlaceholderScreen>
+      <HeroShowcase />
+      <ContinueReading />
+      <EditorPicks />
+      <LatestUpdates />
+      <NewReleases />
+      <TrendingWeekly />
+    </ScrollView>
   )
 }

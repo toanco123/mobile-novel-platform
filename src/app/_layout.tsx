@@ -66,6 +66,11 @@ export default function RootLayout() {
           >
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="(auth)" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="story/[slug]/index" options={{ headerShown: true, title: '' }} />
+            <Stack.Screen
+              name="story/[slug]/[chapter]"
+              options={{ headerShown: true, title: '' }}
+            />
             <Stack.Screen name="account/profile" options={{ headerShown: true, title: 'Hồ sơ' }} />
             <Stack.Screen
               name="account/password"

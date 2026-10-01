@@ -6,6 +6,7 @@ import { BeVietnamPro_500Medium } from '@expo-google-fonts/be-vietnam-pro/500Med
 import { BeVietnamPro_600SemiBold } from '@expo-google-fonts/be-vietnam-pro/600SemiBold'
 import { BeVietnamPro_700Bold } from '@expo-google-fonts/be-vietnam-pro/700Bold'
 import { CormorantGaramond_600SemiBold } from '@expo-google-fonts/cormorant-garamond/600SemiBold'
+import { CormorantGaramond_600SemiBold_Italic } from '@expo-google-fonts/cormorant-garamond/600SemiBold_Italic'
 import { CormorantGaramond_700Bold } from '@expo-google-fonts/cormorant-garamond/700Bold'
 import { GreatVibes_400Regular } from '@expo-google-fonts/great-vibes/400Regular'
 import { Literata_400Regular } from '@expo-google-fonts/literata/400Regular'
@@ -19,6 +20,7 @@ export const fonts = {
   BeVietnamPro_600SemiBold,
   BeVietnamPro_700Bold,
   CormorantGaramond_600SemiBold,
+  CormorantGaramond_600SemiBold_Italic,
   CormorantGaramond_700Bold,
   GreatVibes_400Regular,
   Literata_400Regular,

@@ -1,5 +1,5 @@
 // Chép từ web: src/features/reader/useReaderSettings.ts. Khác web: khai báo rõ kho lưu (localStorage của
-// expo-sqlite, như useTheme). App chưa dùng width (điện thoại luôn hết chiều ngang) và continuous (bước 5).
+// expo-sqlite, như useTheme). App chưa dùng width (điện thoại luôn hết chiều ngang).
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 

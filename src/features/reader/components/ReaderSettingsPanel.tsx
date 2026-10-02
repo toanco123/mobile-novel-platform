@@ -27,7 +27,7 @@ const roundStep = (value: number) => Math.round(value * 100) / 100
 
 /**
  * Như ReaderSettingsPanel của web: màu nền, phông, cỡ chữ, giãn dòng; áp dụng ngay và được nhớ cho
- * lần đọc sau, kèm cài đặt nghe truyện. Chưa có cách đọc (cuộn liên tục, bước 5b); giãn dòng dùng nút − / +
+ * lần đọc sau: cách đọc (từng chương / cuộn liên tục), màu nền, phông, cỡ chữ, giãn dòng, nghe truyện. Giãn dòng dùng nút − / +
  * thay thanh trượt.
  */
 export function ReaderSettingsPanel() {
@@ -40,6 +40,39 @@ export function ReaderSettingsPanel() {
 
   return (
     <ScrollView contentContainerClassName="gap-7 px-4 pt-2 pb-6">
+      <Group label="Cách đọc">
+        <View role="radiogroup" aria-label="Cách đọc" className="flex-row gap-2">
+          {(
+            [
+              [false, 'Từng chương'],
+              [true, 'Cuộn liên tục'],
+            ] as const
+          ).map(([value, label]) => {
+            const active = settings.continuous === value
+            return (
+              <Pressable
+                key={label}
+                role="radio"
+                aria-checked={active}
+                onPress={() => update({ continuous: value })}
+                className={cn(segment, active ? segmentActive : segmentIdle)}
+              >
+                <Text
+                  className={cn('text-sm', active ? 'text-foreground' : 'text-muted-foreground')}
+                >
+                  {label}
+                </Text>
+              </Pressable>
+            )
+          })}
+        </View>
+        <Text className="mt-2 text-xs text-muted-foreground">
+          {settings.continuous
+            ? 'Đọc gần hết chương thì chương sau tự nối vào bên dưới.'
+            : 'Mỗi chương một trang, bấm “Chương sau” để sang chương mới.'}
+        </Text>
+      </Group>
+
       <Group label="Màu nền">
         <View role="radiogroup" aria-label="Màu nền" className="flex-row justify-between">
           {tones.map((t) => {

@@ -98,6 +98,8 @@ export function ChapterArticle({
           <Text
             role="heading"
             className="mt-1 text-center font-heading-bold text-[36px] leading-[40px]"
+            // Cormorant mặc định dùng số kiểu cổ (1 giống chữ ı): ép số thẳng như lining-nums của web
+            style={{ fontVariant: ['lining-nums'] }}
           >
             {chapter.title}
           </Text>

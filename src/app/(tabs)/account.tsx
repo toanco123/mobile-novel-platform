@@ -2,6 +2,7 @@ import Constants from 'expo-constants'
 import { router } from 'expo-router'
 import {
   Ban,
+  Bell,
   ChevronRight,
   FileText,
   Info,
@@ -14,6 +15,7 @@ import {
   UserRound,
   UserRoundX,
 } from 'lucide-react-native'
+import { useState } from 'react'
 import { Pressable, ScrollView, Switch, View } from 'react-native'
 import { toast } from 'sonner-native'
 import { MenuGroup, MenuRow } from '@/components/common/Menu'
@@ -23,6 +25,12 @@ import { SITE_NAME } from '@/config/site'
 import { UserAvatar } from '@/features/auth/components/UserAvatar'
 import { authErrorMessage, useSession, useSignOut } from '@/features/auth/hooks'
 import { openWebPage } from '@/features/auth/navigation'
+import {
+  disablePush,
+  enablePush,
+  PushUnavailableError,
+  usePushToken,
+} from '@/features/notifications/push'
 import { useTheme } from '@/hooks/useTheme'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { paths } from '@/lib/routes'
@@ -80,6 +88,7 @@ export default function AccountScreen() {
             />
           }
         />
+        {user && <PushRow />}
       </MenuGroup>
 
       <MenuGroup title="Thông tin">
@@ -153,6 +162,46 @@ function ProfileCard({ user }: { user: User }) {
   )
 }
 
+/** Bật / tắt thông báo chương mới của truyện đang theo dõi trên máy này */
+function PushRow() {
+  const enabled = usePushToken((s) => s.token !== null)
+  const [pending, setPending] = useState(false)
+  const toggle = async () => {
+    setPending(true)
+    try {
+      if (enabled) {
+        await disablePush()
+        toast.success('Đã tắt thông báo chương mới')
+      } else {
+        await enablePush()
+        toast.success('Đã bật thông báo chương mới', {
+          description: 'Truyện trong tủ có chương mới là bạn nhận được thông báo.',
+        })
+      }
+    } catch (error) {
+      toast.error(error instanceof PushUnavailableError ? error.message : authErrorMessage(error))
+    } finally {
+      setPending(false)
+    }
+  }
+  return (
+    <MenuRow
+      icon={Bell}
+      label="Thông báo chương mới"
+      onPress={toggle}
+      right={
+        <Switch
+          value={enabled}
+          disabled={pending}
+          onValueChange={toggle}
+          aria-label="Thông báo chương mới"
+          trackColorOnClassName="accent-primary"
+        />
+      }
+    />
+  )
+}
+
 function SignedInActions() {
   const signOut = useSignOut()
   return (
@@ -161,12 +210,14 @@ function SignedInActions() {
         icon={LogOut}
         label={signOut.isPending ? 'Đang đăng xuất…' : 'Đăng xuất'}
         right={<View />}
-        onPress={() =>
+        onPress={async () => {
+          // Gỡ mã thông báo của máy khi còn đăng nhập (đăng xuất rồi thì không xóa được nữa)
+          await disablePush().catch(() => {})
           signOut.mutate(undefined, {
             onSuccess: () => toast.success('Đã đăng xuất'),
             onError: (error) => toast.error(authErrorMessage(error)),
           })
-        }
+        }}
       />
       <MenuRow
         icon={UserRoundX}

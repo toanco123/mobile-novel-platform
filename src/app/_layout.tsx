@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { Toaster } from 'sonner-native'
 import { AuthSync } from '@/features/auth/components/AuthSync'
 import { OfflineSync } from '@/features/library/components/OfflineSync'
+import { NotificationSync } from '@/features/notifications/NotificationSync'
 import { useTheme } from '@/hooks/useTheme'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { fonts } from '@/lib/fonts'
@@ -94,6 +95,7 @@ export default function RootLayout() {
           </Stack>
           <AuthSync />
           <OfflineSync />
+          <NotificationSync />
           <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
           <Toaster position="bottom-center" />
         </ThemeProvider>

@@ -33,6 +33,7 @@
         }
       ],
       "expo-sqlite",
+      "expo-notifications",
       [
         "expo-image-picker",
         {

@@ -7,7 +7,7 @@ Bước 5 của `plan-app-di-dong.md`, chia nhỏ (02/10/2026):
 |---|---|---|
 | **5a** | Tự cuộn và nghe truyện ở trang đọc | ✅ (02/10/2026, chưa kiểm trên máy ảo) |
 | **5b** | Cuộn liên tục (hết chương thì nối chương sau) | ✅ (02/10/2026) |
-| **5c** | Thông báo chương mới (expo-notifications, bảng `push_tokens` + gửi qua Expo Push, migration ở web): hỏi người dùng trước | chưa làm |
+| **5c** | Thông báo chương mới (expo-notifications, bảng `push_tokens` + gửi qua Expo Push, migration ở web): hỏi người dùng trước | ✅ code (02/10/2026); chờ tài khoản Expo / Apple / Firebase để gửi thật |
 | **5d** | Icon, splash, Universal Links / App Links, EAS Build, TestFlight, Google Play: cần tài khoản nhà phát triển, chốt bundle id | chưa làm |
 
 Bước 4 ghi nhận thêm: nhánh `user-blocks` của web đã gộp vào `main` (`0d80654`, 02/10/2026).
@@ -42,3 +42,13 @@ Như `ChapterStream` của web: bật ở Cài đặt đọc → Cách đọc (`
 - Tự cuộn chạy xuyên các chương (còn chương sau thì chưa dừng, chờ chương sau nối vào); nghe truyện tự sang chương sau thì chương đó được nối vào.
 - Tắt cuộn liên tục khi đang ở chương nối thêm: mở lại đúng chương đang đọc ở chế độ từng chương.
 - Kiểm: typecheck, lint, 73 test. Chạy thử nhanh trên máy ảo trước khi người dùng bảo dừng: trang đọc mở bình thường, chương 2, 3 tự nối vào khi vuốt, thanh công cụ đổi theo chương, chương cuối có phần kết. Sửa: tên chương và tiêu đề "Bình luận chương N" hiện số kiểu cổ của Cormorant (ép `lining-nums`).
+
+---
+
+## 5c. Thông báo chương mới
+Người dùng chọn viết code trước, gửi / nhận thật để sau khi có tài khoản (02/10/2026); đồng ý đẩy migration lên DB production.
+
+- **Web (nhánh `push-notifications`, commit `7c58d26`):** migration `20261002025309_push_notifications.sql`: bật `pg_net`; bảng `push_tokens` (RPC `register_push_token`: máy đổi tài khoản thì mã chuyển chủ, tối đa 10 máy / tài khoản; chủ xóa được mã); trigger mỗi câu lệnh thêm / sửa chương: chương xuất bản lần đầu ở truyện công khai thì gửi một tin mỗi truyện tới người theo dõi (trừ tác giả) qua `net.http_post` → Expo Push, `data.url` = `/story/<slug>/chapter-<n>`; cùng truyện 30 phút một lần (`private.story_push_log`). Ca kiểm tra (đọc hàng đợi của pg_net trong transaction rollback): đăng ký / chuyển chủ / khách, người nhận, mở đúng chương, chống dội, chương nháp, sửa chương. Đã push, chạy lại ca kiểm tra trên DB thật: qua.
+- **App:** `features/notifications/` (api, `push.ts`: xin quyền, lấy mã Expo, đăng ký / gỡ; `NotificationSync`: bấm thông báo thì mở đúng chương, cả khi app đang tắt; mở app khi đang bật thì đăng ký lại mã). Tab Tài khoản: công tắc "Thông báo chương mới" (đã đăng nhập); đăng xuất thì gỡ mã của máy trước. Plugin `expo-notifications` trong `app.json`.
+- **Chưa gửi / nhận thật được:** Expo Go không nhận thông báo đẩy (SDK 53+), máy ảo cũng không; cần `eas init` (tài khoản Expo, ghi `extra.eas.projectId`), bản build riêng, khóa APNs (Apple Developer) cho iOS và Firebase (FCM) cho Android. Thiếu thì công tắc báo lời giải thích.
+- Chưa làm: xử lý biên nhận của Expo (xóa mã hết hạn `DeviceNotRegistered`); web chưa có giao diện thông báo.

@@ -8,7 +8,7 @@ Bước 4 của `plan-app-di-dong.md`, chia nhỏ như các bước trước (01
 | **4a** | Tab Khám phá: thể loại, bảng xếp hạng, danh sách theo loại có bộ lọc; nối link thể loại, "Xem tất cả", khối Thể loại ở trang chủ | ✅ (01/10/2026) |
 | **4b** | Tìm kiếm: nút ở header trang chủ, gợi ý nhanh, trang kết quả | ✅ (02/10/2026, chưa kiểm trên máy ảo) |
 | **4c** | Bình luận (trả lời một cấp, báo cáo), chấm điểm, báo lỗi chương, form liên hệ, thanh mục lục dính ở trang truyện | ✅ (02/10/2026, chưa kiểm trên máy ảo) |
-| **4d** | Chặn người dùng (App Store Guideline 1.2): cần bảng/RPC mới ở web, hỏi người dùng trước khi làm | chưa làm |
+| **4d** | Chặn người dùng (App Store Guideline 1.2): cần bảng/RPC mới ở web, hỏi người dùng trước khi làm | ✅ (02/10/2026, chưa kiểm trên máy ảo) |
 
 App chỉ cho người đọc: bỏ nút "Đăng truyện", "Tạo thể loại" của web (khu Sáng tác ở web).
 
@@ -64,3 +64,12 @@ Api và schema đã chép từ web ở bước 0 (`features/comments`, `features
 - 4c1: `features/comments/hooks.ts` (chép từ web), `components/` (CommentsSection, CommentForm, CommentItem, RatingSummary, StarRatingInput); trang truyện thêm mục Bình luận & đánh giá và `SectionNav` dính (`features/stories/detail/SectionNav.tsx`, `stickyHeaderIndices`, mục đang xem theo vị trí cuộn); trang đọc thêm `ChapterComments`.
 - 4c2: `features/feedback/hooks.ts` (chép từ web); `ReasonReportForm` (form chung của hai hộp báo cáo, lý do bằng `ChoiceList`), `ReportCommentButton`, `ReportChapterButton` (dưới thanh chuyển chương cuối), `ContactForm` + màn `/contact` (tab Tài khoản mở màn này thay cho trang web).
 - Typecheck, lint, test, đóng gói iOS qua. Người dùng bảo không cần kiểm trên máy ảo phần này.
+
+---
+
+## 4d. Chặn người dùng
+App Store Guideline 1.2 (nội dung do người dùng đăng) yêu cầu: lọc nội dung, báo cáo (4c), **chặn người dùng**, liên hệ (4c). Người dùng đồng ý sửa cả web và đẩy migration lên DB production (02/10/2026).
+
+- **Web (nhánh `user-blocks`, commit `ee13151`, chưa gộp vào `main`):** migration `20261002021134_user_blocks.sql`: bảng `user_blocks` (`blocker_id` mặc định `auth.uid()`, `blocked_id` khóa ngoại tới `profiles`; RLS: chỉ người chặn đọc, thêm, xóa), `private.my_blocked_ids()` (definer), policy đọc `comments` bỏ bình luận của người mình đã chặn: `comment_threads`, trả lời và số trả lời đều tự ẩn trên cả web lẫn app. Ca kiểm tra trong `supabase/checks/rls_and_rules.sql` (chặn / thấy / khách / bỏ chặn / trùng / tự chặn / chặn thay người khác), `thiet-ke-database.md`. Đã push lên production, chạy lại ca kiểm tra trên schema thật: qua; advisors chỉ còn cảnh báo cũ "Leaked Password Protection" (cài đặt Auth, không do migration này).
+- **App:** `features/blocks/` (api, hooks; riêng của app). Nút "Chặn" dưới bình luận và trả lời của người khác (hỏi lại, khách thì mở đăng nhập); màn `account/blocked` (Tài khoản → Người đã chặn) để bỏ chặn. Chặn / bỏ chặn tải lại mọi query `[comments]`.
+- Chưa làm: chặn chưa ẩn truyện của người bị chặn (chỉ bình luận); web chưa có giao diện chặn (người chặn trên app vẫn không thấy bình luận đó trên web).

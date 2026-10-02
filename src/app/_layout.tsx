@@ -74,6 +74,10 @@ export default function RootLayout() {
             />
             <Stack.Screen name="account/profile" options={{ headerShown: true, title: 'Hồ sơ' }} />
             <Stack.Screen
+              name="account/blocked"
+              options={{ headerShown: true, title: 'Người đã chặn' }}
+            />
+            <Stack.Screen
               name="account/password"
               options={{ headerShown: true, title: 'Đổi mật khẩu' }}
             />

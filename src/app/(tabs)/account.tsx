@@ -1,6 +1,7 @@
 import Constants from 'expo-constants'
 import { router } from 'expo-router'
 import {
+  Ban,
   ChevronRight,
   FileText,
   Info,
@@ -51,6 +52,11 @@ export default function AccountScreen() {
               onPress={() => router.push('/account/password')}
             />
           )}
+          <MenuRow
+            icon={Ban}
+            label="Người đã chặn"
+            onPress={() => router.push('/account/blocked')}
+          />
           <MenuRow
             icon={PenLine}
             label="Viết truyện (trên web)"

@@ -1,9 +1,12 @@
 import { router } from 'expo-router'
 import { useState } from 'react'
 import { Alert, Pressable, View } from 'react-native'
+import { toast } from 'sonner-native'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Text } from '@/components/ui/text'
 import { UserAvatar } from '@/features/auth/components/UserAvatar'
+import { authErrorMessage } from '@/features/auth/hooks'
+import { useBlockUser } from '@/features/blocks/hooks'
 import { formatRelativeTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { Comment } from '@/types/comment'
@@ -120,7 +123,10 @@ function CommentBody({ comment }: { comment: Comment }) {
   )
 }
 
-/** Hàng nút dưới một bình luận hoặc trả lời: Trả lời, rồi Xóa (của mình) hoặc Báo cáo (của người khác) */
+/**
+ * Hàng nút dưới một bình luận hoặc trả lời: Trả lời, rồi Xóa (của mình) hoặc Báo cáo, Chặn (của
+ * người khác)
+ */
 function CommentActions({
   comment,
   viewer,
@@ -149,9 +155,41 @@ function CommentActions({
       {comment.user.id === viewer?.id ? (
         <ActionButton label="Xóa" onPress={confirmDelete} disabled={remove.isPending} />
       ) : (
-        <ReportCommentButton comment={comment} guest={!viewer} />
+        <>
+          <ReportCommentButton comment={comment} guest={!viewer} />
+          <BlockButton comment={comment} guest={!viewer} />
+        </>
       )}
     </View>
+  )
+}
+
+/**
+ * Chặn người viết (riêng của app, App Store Guideline 1.2): hỏi lại rồi chặn; bình luận của người đó
+ * tự ẩn (RLS). Bỏ chặn ở Tài khoản → Người đã chặn.
+ */
+function BlockButton({ comment, guest }: { comment: Comment; guest: boolean }) {
+  const block = useBlockUser()
+  const name = comment.user.displayName
+  const confirm = () =>
+    Alert.alert(
+      `Chặn ${name}?`,
+      `Bạn sẽ không thấy bình luận và trả lời của ${name} nữa. Người này không được báo. Bỏ chặn trong Tài khoản → Người đã chặn.`,
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Chặn',
+          style: 'destructive',
+          onPress: () =>
+            block.mutate(comment.user.id, {
+              onSuccess: () => toast.success(`Đã chặn ${name}`),
+              onError: (error) => toast.error(authErrorMessage(error)),
+            }),
+        },
+      ],
+    )
+  return (
+    <ActionButton label="Chặn" onPress={guest ? toLogin : confirm} disabled={block.isPending} />
   )
 }
 

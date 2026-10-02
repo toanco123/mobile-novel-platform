@@ -7,7 +7,7 @@ Bước 4 của `plan-app-di-dong.md`, chia nhỏ như các bước trước (01
 |---|---|---|
 | **4a** | Tab Khám phá: thể loại, bảng xếp hạng, danh sách theo loại có bộ lọc; nối link thể loại, "Xem tất cả", khối Thể loại ở trang chủ | ✅ (01/10/2026) |
 | **4b** | Tìm kiếm: nút ở header trang chủ, gợi ý nhanh, trang kết quả | ✅ (02/10/2026, chưa kiểm trên máy ảo) |
-| **4c** | Bình luận (trả lời một cấp, báo cáo), chấm điểm, báo lỗi chương, form liên hệ, thanh mục lục dính ở trang truyện | chưa làm |
+| **4c** | Bình luận (trả lời một cấp, báo cáo), chấm điểm, báo lỗi chương, form liên hệ, thanh mục lục dính ở trang truyện | ✅ (02/10/2026, chưa kiểm trên máy ảo) |
 | **4d** | Chặn người dùng (App Store Guideline 1.2): cần bảng/RPC mới ở web, hỏi người dùng trước khi làm | chưa làm |
 
 App chỉ cho người đọc: bỏ nút "Đăng truyện", "Tạo thể loại" của web (khu Sáng tác ở web).
@@ -46,3 +46,21 @@ Web có ô tìm ở header (`SearchBox`: gõ từ 2 ký tự thì gợi ý truy�
 **Kết quả 4b (02/10/2026):**
 - Code: `src/app/search.tsx` (ô tìm, gợi ý, kết quả, ô trống), `features/stories/StoryRow.tsx`, `src/hooks/useDebouncedValue.ts` (chép từ web); nút kính lúp ở header trang chủ (`(tabs)/_layout.tsx`); tên tác giả ở `StoryHero` mở tìm kiếm; `links.search(q?)`.
 - Typecheck, lint, test qua. Người dùng bảo không cần kiểm trên máy ảo phần này.
+
+---
+
+## 4c. Bình luận, chấm điểm, báo cáo, liên hệ
+Api và schema đã chép từ web ở bước 0 (`features/comments`, `features/feedback`); hook chép từ web. Giao diện như web:
+
+**4c1:**
+- Trang truyện: mục Bình luận & đánh giá (`CommentsSection`): bảng điểm (`RatingSummary`: điểm trung bình, sao, phân bố 5→1), chấm điểm của mình (`StarRatingInput`, khách thì mời đăng nhập), ô viết bình luận (`CommentForm`, 1000 ký tự), danh sách bình luận gốc tải thêm từng trang, mỗi bình luận mở nhóm trả lời (một cấp), Trả lời (trả lời câu trả lời thì điền sẵn "@Tên"), Xóa bình luận của mình (hỏi lại bằng `Alert`).
+- Thanh mục lục dính (`SectionNav` của web): Giới thiệu · Danh sách chương (số) · Bình luận (số), dính dưới header khi cuộn (`stickyHeaderIndices`), tô sáng mục đang xem, bấm thì cuộn tới.
+- Trang đọc: Bình luận chương (`ChapterComments`) dưới cuối chương; mất mạng thì báo cần mạng.
+- Bàn phím không che ô viết: ScrollView `automaticallyAdjustKeyboardInsets`.
+
+**4c2:** báo cáo bình luận (`ReportCommentDialog`), báo lỗi chương (`ReportChapterDialog`), form liên hệ (`ContactForm`, mở từ tab Tài khoản thay cho link trang Liên hệ của web).
+
+**Kết quả 4c (02/10/2026):**
+- 4c1: `features/comments/hooks.ts` (chép từ web), `components/` (CommentsSection, CommentForm, CommentItem, RatingSummary, StarRatingInput); trang truyện thêm mục Bình luận & đánh giá và `SectionNav` dính (`features/stories/detail/SectionNav.tsx`, `stickyHeaderIndices`, mục đang xem theo vị trí cuộn); trang đọc thêm `ChapterComments`.
+- 4c2: `features/feedback/hooks.ts` (chép từ web); `ReasonReportForm` (form chung của hai hộp báo cáo, lý do bằng `ChoiceList`), `ReportCommentButton`, `ReportChapterButton` (dưới thanh chuyển chương cuối), `ContactForm` + màn `/contact` (tab Tài khoản mở màn này thay cho trang web).
+- Typecheck, lint, test, đóng gói iOS qua. Người dùng bảo không cần kiểm trên máy ảo phần này.

@@ -78,7 +78,7 @@ export default function AccountScreen() {
 
       <MenuGroup title="Thông tin">
         <MenuRow icon={Info} label="Giới thiệu" external onPress={() => openWebPage(paths.about)} />
-        <MenuRow icon={Mail} label="Liên hệ" external onPress={() => openWebPage(paths.contact)} />
+        <MenuRow icon={Mail} label="Liên hệ" onPress={() => router.push('/contact')} />
         <MenuRow
           icon={FileText}
           label="Điều khoản sử dụng"

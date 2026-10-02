@@ -19,8 +19,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useChapter, useRecordChapterView } from '@/features/chapters/hooks'
 import { NotSavedNotice } from '@/features/offline/components/NotSavedNotice'
 import { usePrefetchChapters } from '@/features/offline/prefetch'
+import { ReportChapterButton } from '@/features/feedback/components/ReportChapterButton'
 import { ChapterNotSavedError } from '@/features/offline/readChapter'
 import { ChapterArticle } from '@/features/reader/components/ChapterArticle'
+import { ChapterComments } from '@/features/reader/components/ChapterComments'
 import { ChapterEnd } from '@/features/reader/components/ChapterEnd'
 import { ChapterNav } from '@/features/reader/components/ChapterNav'
 import { ReaderChapterIndex } from '@/features/reader/components/ReaderChapterIndex'
@@ -46,9 +48,9 @@ const parseChapterSegment = (segment: string | undefined) => {
 type ReaderPanel = 'index' | 'settings'
 
 /**
- * Trang đọc từng chương (ChapterReaderPage của web). Cuộn liên tục, tự cuộn, nghe truyện: bước 5;
- * bình luận, báo lỗi chương: bước 4. Chương đọc qua kho trên máy (features/offline): mất mạng vẫn đọc
- * được chương đã mở hoặc đã tải trước.
+ * Trang đọc từng chương (ChapterReaderPage của web): nội dung, chuyển chương, báo lỗi chương, bình
+ * luận chương. Cuộn liên tục, tự cuộn, nghe truyện: bước 5. Chương đọc qua kho trên máy
+ * (features/offline): mất mạng vẫn đọc được chương đã mở hoặc đã tải trước.
  */
 export default function ChapterScreen() {
   const { slug, chapter, resume } = useLocalSearchParams<{
@@ -205,6 +207,8 @@ function ReaderView({ chapter, resume }: { chapter: ChapterContent; resume: numb
         onScroll={onScroll}
         scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
+        // Bàn phím không che ô viết bình luận chương
+        automaticallyAdjustKeyboardInsets
         contentContainerStyle={{
           paddingTop: toolbarTop + TOOLBAR_HEIGHT + 32,
           paddingBottom: insets.bottom + 64,
@@ -224,6 +228,14 @@ function ReaderView({ chapter, resume }: { chapter: ChapterContent; resume: numb
             onOpenIndex={openIndex}
             label="Chuyển chương (cuối)"
             emphasizeNext={!chapter.next}
+          />
+          <ReportChapterButton slug={chapter.story.slug} chapter={chapter.number} />
+        </View>
+        <View className="mt-16 border-t border-border pt-12">
+          <ChapterComments
+            key={chapter.number}
+            slug={chapter.story.slug}
+            chapter={chapter.number}
           />
         </View>
       </ScrollView>

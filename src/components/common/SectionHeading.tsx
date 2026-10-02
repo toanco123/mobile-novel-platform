@@ -1,5 +1,6 @@
+import { type Href, Link } from 'expo-router'
 import type { ReactNode } from 'react'
-import { View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { Text } from '@/components/ui/text'
 import { cn } from '@/lib/utils'
 
@@ -38,3 +39,14 @@ export function SectionNote({ children }: { children: string }) {
 }
 
 export const SECTION_ERROR = 'Không tải được danh sách này. Kéo xuống để tải lại.'
+
+/** Link "Xem tất cả" đặt ở `action` của SectionHeading (như moreTo của web) */
+export function SeeAll({ href }: { href: Href }) {
+  return (
+    <Link href={href} asChild>
+      <Pressable role="link" hitSlop={8} className="pb-1 active:opacity-70">
+        <Text className="font-sans-medium text-sm text-rose-gold">Xem tất cả</Text>
+      </Pressable>
+    </Link>
+  )
+}

@@ -81,6 +81,10 @@ export default function RootLayout() {
               name="account/delete"
               options={{ headerShown: true, title: 'Xóa tài khoản' }}
             />
+            <Stack.Screen name="genres/index" options={{ headerShown: true, title: '' }} />
+            <Stack.Screen name="genres/[slug]" options={{ headerShown: true, title: '' }} />
+            <Stack.Screen name="list/[type]" options={{ headerShown: true, title: '' }} />
+            <Stack.Screen name="ranking" options={{ headerShown: true, title: '' }} />
           </Stack>
           <AuthSync />
           <OfflineSync />

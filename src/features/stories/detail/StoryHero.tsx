@@ -6,6 +6,7 @@ import { StyleSheet, View } from 'react-native'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Text } from '@/components/ui/text'
+import { GenreLinks } from '@/features/genres/GenreLinks'
 import { useSession } from '@/features/auth/hooks'
 import { openWebPage } from '@/features/auth/navigation'
 import { FollowButton } from '@/features/library/components/FollowButton'
@@ -81,7 +82,7 @@ export function StoryHero({ story }: { story: Story }) {
           <View className="flex-1 gap-1.5">
             {story.genres.length > 0 && (
               <Text className="text-xs" style={{ color: HERO.gold }}>
-                {story.genres.map((g) => g.name).join(' · ')}
+                <GenreLinks genres={story.genres} />
               </Text>
             )}
             <Text

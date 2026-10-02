@@ -1,6 +1,8 @@
+import { Link } from 'expo-router'
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { Text } from '@/components/ui/text'
+import { links } from '@/lib/links'
 import { cn } from '@/lib/utils'
 import type { Story } from '@/types/story'
 
@@ -49,13 +51,14 @@ export function StoryDescription({ story }: { story: Story }) {
           </Text>
         </Pressable>
       )}
-      {/* Bấm vào thể loại mở màn Thể loại: thêm ở bước 4 */}
       {story.genres.length > 0 && (
         <View aria-label="Thể loại" className="mt-5 flex-row flex-wrap gap-2">
           {story.genres.map((g) => (
-            <View key={g.slug} className="rounded-full border border-border px-3.5 py-1.5">
-              <Text className="text-sm text-muted-foreground">{g.name}</Text>
-            </View>
+            <Link key={g.slug} href={links.genre(g.slug)} asChild>
+              <Pressable className="rounded-full border border-border px-3.5 py-1.5 active:border-primary/50">
+                <Text className="text-sm text-muted-foreground">{g.name}</Text>
+              </Pressable>
+            </Link>
           ))}
         </View>
       )}

@@ -1,7 +1,12 @@
 import { Link } from 'expo-router'
 import { Trophy } from 'lucide-react-native'
 import { Pressable, View } from 'react-native'
-import { SECTION_ERROR, SectionHeading, SectionNote } from '@/components/common/SectionHeading'
+import {
+  SECTION_ERROR,
+  SectionHeading,
+  SectionNote,
+  SeeAll,
+} from '@/components/common/SectionHeading'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Text } from '@/components/ui/text'
 import { useThemeColors } from '@/hooks/useThemeColors'
@@ -20,7 +25,12 @@ export function TrendingWeekly() {
 
   return (
     <View className="mt-10">
-      <SectionHeading icon={<Trophy size={22} color={colors.roseGold} />}>Top tuần</SectionHeading>
+      <SectionHeading
+        icon={<Trophy size={22} color={colors.roseGold} />}
+        action={<SeeAll href={links.ranking} />}
+      >
+        Top tuần
+      </SectionHeading>
       {isError ? (
         <SectionNote>{SECTION_ERROR}</SectionNote>
       ) : data?.length === 0 ? (

@@ -15,6 +15,7 @@ import { useReducedMotion } from 'react-native-reanimated'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Text } from '@/components/ui/text'
+import { GenreLinks } from '@/features/genres/GenreLinks'
 import { FollowButton } from '@/features/library/components/FollowButton'
 import { formatCount } from '@/lib/format'
 import { links } from '@/lib/links'
@@ -130,7 +131,7 @@ function Slide({ story, width }: { story: Story; width: number }) {
         <View className="flex-1 gap-1.5">
           {story.genres.length > 0 && (
             <Text numberOfLines={1} className="text-xs" style={{ color: GOLD }}>
-              {story.genres.map((g) => g.name).join(' · ')}
+              <GenreLinks genres={story.genres} />
             </Text>
           )}
           <Link href={links.story(story.slug)} asChild>

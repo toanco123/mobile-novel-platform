@@ -1,7 +1,12 @@
 import { Link } from 'expo-router'
 import { Fragment } from 'react'
 import { Pressable, View } from 'react-native'
-import { SECTION_ERROR, SectionHeading, SectionNote } from '@/components/common/SectionHeading'
+import {
+  SECTION_ERROR,
+  SectionHeading,
+  SectionNote,
+  SeeAll,
+} from '@/components/common/SectionHeading'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Text } from '@/components/ui/text'
 import { TextLink } from '@/components/ui/text-link'
@@ -15,7 +20,8 @@ export function LatestUpdates() {
 
   return (
     <View className="mt-10">
-      <SectionHeading>Mới cập nhật</SectionHeading>
+      {/* Web không có link này (đã có menu đầu trang); app thêm để tới danh sách đầy đủ */}
+      <SectionHeading action={<SeeAll href={links.list('latest')} />}>Mới cập nhật</SectionHeading>
       {isError ? (
         <SectionNote>{SECTION_ERROR}</SectionNote>
       ) : data?.length === 0 ? (

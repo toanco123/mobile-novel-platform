@@ -3,13 +3,14 @@ import { useState } from 'react'
 import { RefreshControl, ScrollView } from 'react-native'
 import { ContinueReading } from '@/features/library/components/ContinueReading'
 import { EditorPicks } from '@/features/stories/sections/EditorPicks'
+import { GenreCloud } from '@/features/stories/sections/GenreCloud'
 import { HeroShowcase } from '@/features/stories/sections/HeroShowcase'
 import { LatestUpdates } from '@/features/stories/sections/LatestUpdates'
 import { NewReleases } from '@/features/stories/sections/NewReleases'
 import { TrendingWeekly } from '@/features/stories/sections/TrendingWeekly'
 import { useThemeColors } from '@/hooks/useThemeColors'
 
-/** Trang chủ (HomePage của web, một cột); khối Thể loại thêm ở bước 4 */
+/** Trang chủ (HomePage của web, một cột) */
 export default function HomeScreen() {
   const queryClient = useQueryClient()
   const colors = useThemeColors()
@@ -20,6 +21,7 @@ export default function HomeScreen() {
     await Promise.all([
       queryClient.refetchQueries({ queryKey: ['stories'], type: 'active' }),
       queryClient.refetchQueries({ queryKey: ['library'], type: 'active' }),
+      queryClient.refetchQueries({ queryKey: ['genres'], type: 'active' }),
     ])
     setRefreshing(false)
   }
@@ -38,6 +40,7 @@ export default function HomeScreen() {
       <LatestUpdates />
       <NewReleases />
       <TrendingWeekly />
+      <GenreCloud />
     </ScrollView>
   )
 }

@@ -17,4 +17,11 @@ export const links = {
         ...(resume !== undefined && { resume: String(resume) }),
       },
     }) satisfies Href,
+  genres: '/genres' as const satisfies Href,
+  genre: (slug: string) => ({ pathname: '/genres/[slug]', params: { slug } }) satisfies Href,
+  ranking: '/ranking' as const satisfies Href,
+  /** Danh sách truyện theo loại như /list/:type của web */
+  list: (type: ListType) => ({ pathname: '/list/[type]', params: { type } }) satisfies Href,
 }
+
+export type ListType = 'latest' | 'ongoing' | 'completed'

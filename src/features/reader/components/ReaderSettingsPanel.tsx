@@ -1,13 +1,16 @@
 import { Minus, Plus, RotateCcw } from 'lucide-react-native'
 import type { ReactNode } from 'react'
-import { Pressable, ScrollView, View } from 'react-native'
+import { Pressable, ScrollView, Switch, View } from 'react-native'
 import { ScopedTheme } from 'uniwind'
+import { ChoiceList } from '@/components/common/ChoiceList'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
 import { useTheme } from '@/hooks/useTheme'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { cn } from '@/lib/utils'
 import { fonts, toneTheme, tones } from '../readerOptions'
+import { useSpeechSettings } from '../speech/useSpeechSettings'
+import { pickVoice, useVoices } from '../speech/voices'
 import {
   FONT_SIZE_RANGE,
   LINE_HEIGHT_RANGE,
@@ -24,7 +27,7 @@ const roundStep = (value: number) => Math.round(value * 100) / 100
 
 /**
  * Như ReaderSettingsPanel của web: màu nền, phông, cỡ chữ, giãn dòng; áp dụng ngay và được nhớ cho
- * lần đọc sau. Chưa có cách đọc (cuộn liên tục) và nghe truyện (bước 5); giãn dòng dùng nút − / +
+ * lần đọc sau, kèm cài đặt nghe truyện. Chưa có cách đọc (cuộn liên tục, bước 5b); giãn dòng dùng nút − / +
  * thay thanh trượt.
  */
 export function ReaderSettingsPanel() {
@@ -129,8 +132,51 @@ export function ReaderSettingsPanel() {
         />
       </Group>
 
+      <SpeechSettings />
+
       <ResetButton disabled={isDefault} onPress={settings.reset} />
     </ScrollView>
+  )
+}
+
+/**
+ * Như SpeechSettings của web: giọng đọc và tự chuyển chương cho nghe truyện. Chỉ liệt kê giọng tiếng
+ * Việt (giọng ngôn ngữ khác đọc sai dấu); máy chưa có thì báo cách cài.
+ */
+function SpeechSettings() {
+  const { voiceURI, autoNext, update } = useSpeechSettings()
+  const { vietnamese } = useVoices()
+  const current = pickVoice(vietnamese, voiceURI)
+  const colors = useThemeColors()
+
+  return (
+    <Group label="Nghe truyện">
+      <View className="gap-3">
+        {vietnamese.length > 1 && current && (
+          <ChoiceList
+            label="Giọng đọc"
+            options={vietnamese.map((v) => ({ value: v.identifier, label: v.name }))}
+            value={current.identifier}
+            onChange={(id) => update({ voiceURI: id })}
+          />
+        )}
+        {vietnamese.length === 0 && (
+          <Text className="text-xs text-muted-foreground">
+            Máy bạn chưa có giọng tiếng Việt nên có thể đọc sai dấu. Cài thêm giọng tiếng Việt trong
+            Cài đặt → Trợ năng → Nội dung được đọc → Giọng nói của máy để nghe rõ hơn.
+          </Text>
+        )}
+        <View className="flex-row items-center justify-between gap-3">
+          <Text className="flex-1 text-sm">Hết chương tự đọc tiếp chương sau</Text>
+          <Switch
+            value={autoNext}
+            onValueChange={(value) => update({ autoNext: value })}
+            trackColor={{ true: colors.primary }}
+            aria-label="Hết chương tự đọc tiếp chương sau"
+          />
+        </View>
+      </View>
+    </Group>
   )
 }
 

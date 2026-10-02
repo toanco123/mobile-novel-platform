@@ -58,3 +58,6 @@ export function faceOf(faces: FontFaces, { bold, italic }: { bold?: boolean; ita
   if (bold) return italic ? faces.boldItalic : faces.bold
   return italic ? faces.italic : faces.regular
 }
+
+/** Tốc độ dạng "1,25×" (thanh nghe truyện và thanh tự cuộn); như web, không dùng toLocaleString (Hermes) */
+export const rateLabel = (rate: number) => `${String(rate).replace('.', ',')}×`

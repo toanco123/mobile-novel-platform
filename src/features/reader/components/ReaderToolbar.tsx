@@ -1,5 +1,5 @@
 import { router } from 'expo-router'
-import { ALargeSmall, ArrowLeft, ListOrdered } from 'lucide-react-native'
+import { ALargeSmall, ArrowLeft, ChevronsDown, Headphones, ListOrdered } from 'lucide-react-native'
 import { type ReactNode, useEffect, useState } from 'react'
 import { Animated, Pressable, View } from 'react-native'
 import { useReducedMotion } from 'react-native-reanimated'
@@ -17,13 +17,25 @@ type Props = {
   top: number
   onOpenIndex: () => void
   onOpenSettings: () => void
+  /** Nút tự động cuộn */
+  autoScroll: { active: boolean; onPress: () => void }
+  /** Nút nghe truyện */
+  listen: { active: boolean; onPress: () => void }
 }
 
 /**
  * Như ReaderToolbar của web: quay lại, tên truyện + chương, mục lục, cài đặt đọc. Trượt lên ẩn sau dải
- * nền của thanh trạng thái khi đọc. Nút tự cuộn và nghe truyện thêm ở bước 5.
+ * nền của thanh trạng thái khi đọc. Có nút tự cuộn và nghe truyện như web.
  */
-export function ReaderToolbar({ chapter, visible, top, onOpenIndex, onOpenSettings }: Props) {
+export function ReaderToolbar({
+  chapter,
+  visible,
+  top,
+  onOpenIndex,
+  onOpenSettings,
+  autoScroll,
+  listen,
+}: Props) {
   const { story } = chapter
   const colors = useThemeColors()
   const reducedMotion = useReducedMotion()
@@ -72,6 +84,12 @@ export function ReaderToolbar({ chapter, visible, top, onOpenIndex, onOpenSettin
               : `Chương ${chapter.number}`}
           </Text>
         </View>
+        <IconButton label="Tự động cuộn" selected={autoScroll.active} onPress={autoScroll.onPress}>
+          <ChevronsDown size={22} color={autoScroll.active ? colors.primary : colors.foreground} />
+        </IconButton>
+        <IconButton label="Nghe truyện" selected={listen.active} onPress={listen.onPress}>
+          <Headphones size={21} color={listen.active ? colors.primary : colors.foreground} />
+        </IconButton>
         <IconButton label="Mục lục" onPress={onOpenIndex}>
           <ListOrdered size={22} color={colors.foreground} />
         </IconButton>
@@ -86,16 +104,20 @@ export function ReaderToolbar({ chapter, visible, top, onOpenIndex, onOpenSettin
 function IconButton({
   label,
   onPress,
+  selected,
   children,
 }: {
   label: string
   onPress: () => void
+  /** Nút bật / tắt đang bật */
+  selected?: boolean
   children: ReactNode
 }) {
   return (
     <Pressable
       role="button"
       aria-label={label}
+      aria-selected={selected}
       onPress={onPress}
       className="size-11 items-center justify-center rounded-full active:bg-muted"
     >

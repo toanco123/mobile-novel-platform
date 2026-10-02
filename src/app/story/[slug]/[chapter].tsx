@@ -1,7 +1,7 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { useKeepAwake } from 'expo-keep-awake'
 import { StatusBar } from 'expo-status-bar'
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Animated,
   type LayoutChangeEvent,
@@ -10,6 +10,7 @@ import {
   ScrollView,
   View,
 } from 'react-native'
+import { useReducedMotion } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ScopedTheme } from 'uniwind'
 import { BottomPanel } from '@/components/common/BottomPanel'
@@ -21,6 +22,13 @@ import { NotSavedNotice } from '@/features/offline/components/NotSavedNotice'
 import { usePrefetchChapters } from '@/features/offline/prefetch'
 import { ReportChapterButton } from '@/features/feedback/components/ReportChapterButton'
 import { ChapterNotSavedError } from '@/features/offline/readChapter'
+import { blockTexts, parseContent } from '@/features/chapters/richText'
+import {
+  type AutoScrollFrame,
+  continueAutoScrollAt,
+  useAutoScroll,
+} from '@/features/reader/autoscroll/useAutoScroll'
+import { AutoScrollBar } from '@/features/reader/components/AutoScrollBar'
 import { ChapterArticle } from '@/features/reader/components/ChapterArticle'
 import { ChapterComments } from '@/features/reader/components/ChapterComments'
 import { ChapterEnd } from '@/features/reader/components/ChapterEnd'
@@ -29,10 +37,20 @@ import { ReaderChapterIndex } from '@/features/reader/components/ReaderChapterIn
 import { ReaderSettingsPanel } from '@/features/reader/components/ReaderSettingsPanel'
 import { ReaderToolbar, TOOLBAR_HEIGHT } from '@/features/reader/components/ReaderToolbar'
 import { ResumeNotice } from '@/features/reader/components/ResumeNotice'
+import { SpeechBar } from '@/features/reader/components/SpeechBar'
+import { goToChapter } from '@/features/reader/navigation'
 import { type ArticleMetrics, offsetForProgress, progressOf } from '@/features/reader/progress'
 import { darkTones, toneTheme } from '@/features/reader/readerOptions'
 import { useAutoHideToolbar } from '@/features/reader/useAutoHideToolbar'
 import { useReaderSettings } from '@/features/reader/useReaderSettings'
+import {
+  claimSpeech,
+  releaseSpeech,
+  setSpeechAdvance,
+  speech,
+  useSpeechPlayer,
+} from '@/features/reader/speech/speechPlayer'
+import { countWords } from '@/features/reader/text'
 import { MIN_RESUME, useReadingTracker } from '@/features/reader/useReadingTracker'
 import { useTheme } from '@/hooks/useTheme'
 import { useThemeColors } from '@/hooks/useThemeColors'
@@ -49,7 +67,7 @@ type ReaderPanel = 'index' | 'settings'
 
 /**
  * Trang đọc từng chương (ChapterReaderPage của web): nội dung, chuyển chương, báo lỗi chương, bình
- * luận chương. Cuộn liên tục, tự cuộn, nghe truyện: bước 5. Chương đọc qua kho trên máy
+ * luận chương, tự cuộn, nghe truyện. Cuộn liên tục: bước 5b. Chương đọc qua kho trên máy
  * (features/offline): mất mạng vẫn đọc được chương đã mở hoặc đã tải trước.
  */
 export default function ChapterScreen() {
@@ -143,10 +161,58 @@ function ReaderView({ chapter, resume }: { chapter: ChapterContent; resume: numb
   const tone = useReaderSettings((s) => s.tone)
   const appTheme = useTheme((s) => s.theme)
   const darkBackground = toneTheme[tone] ? darkTones.has(tone) : appTheme === 'dark'
-  const [toolbarVisible, setToolbarVisible, autoHide] = useAutoHideToolbar()
   // Mỗi chương là một Reader riêng (key), nên chuyển chương là bảng đang mở tự đóng
   const [panel, setPanel] = useState<ReaderPanel | null>(null)
   const scroll = useRef<ScrollView>(null)
+  const slug = chapter.story.slug
+  const number = chapter.number
+  // Phần nội dung trong khối chương và vị trí từng đơn vị đọc (tự cuộn, nghe truyện)
+  const body = useRef({ y: 0, height: 0 })
+  const units = useRef(new Map<number, { y: number; height: number }>())
+  // Số đo cho tự cuộn, cập nhật cùng lúc với metrics (onLayout, onScroll, kéo / thả, mở bảng)
+  const frame = useRef<AutoScrollFrame>({
+    scrollY: 0,
+    viewport: 0,
+    articleBottom: 0,
+    bodyHeight: 0,
+    touching: false,
+    blocked: false,
+  })
+  useEffect(() => {
+    frame.current.blocked = panel !== null
+  }, [panel])
+  const words = useMemo(
+    () => countWords(blockTexts(parseContent(chapter.content)).join(' ')),
+    [chapter.content],
+  )
+  const reducedMotion = useReducedMotion()
+
+  const autoScroll = useAutoScroll({
+    slug,
+    chapter: number,
+    words,
+    frameRef: frame,
+    scrollTo: (y) => scroll.current?.scrollTo({ y, animated: false }),
+  })
+  const [toolbarVisible, setToolbarVisible, autoHide] = useAutoHideToolbar(
+    autoScroll.status === 'running',
+  )
+
+  // Nghe truyện: bộ phát dùng chung cả app (speechPlayer.ts)
+  const player = useSpeechPlayer()
+  const mine = player.slug === slug && player.chapter === number
+  const listening = player.status !== 'idle'
+  const activeParagraph = mine && listening ? player.paragraph : undefined
+  useEffect(() => {
+    claimSpeech()
+    setSpeechAdvance((s, next) => goToChapter(s, next))
+    // Người đọc tự chuyển sang chương khác (mục lục, nút chương) khi đang nghe thì dừng, như web;
+    // giọng đọc tự chuyển chương thì bộ phát đã ở chương này
+    const s = useSpeechPlayer.getState()
+    if (s.status !== 'idle' && (s.slug !== slug || s.chapter !== number)) speech.stop()
+    return releaseSpeech
+  }, [slug, number])
+
   // Số đo để tính tỉ lệ đã đọc; cập nhật khi cuộn/dàn trang, không cần render lại
   const metrics = useRef<ArticleMetrics & { scrollY: number }>({
     top: 0,
@@ -176,11 +242,13 @@ function ReaderView({ chapter, resume }: { chapter: ChapterContent; resume: numb
   function onArticleLayout(e: LayoutChangeEvent) {
     metrics.current.top = e.nativeEvent.layout.y
     metrics.current.height = e.nativeEvent.layout.height
+    frame.current.articleBottom = e.nativeEvent.layout.y + e.nativeEvent.layout.height
     tryResume()
   }
 
   function onViewportLayout(e: LayoutChangeEvent) {
     metrics.current.viewport = e.nativeEvent.layout.height
+    frame.current.viewport = e.nativeEvent.layout.height
     tryResume()
   }
 
@@ -188,10 +256,70 @@ function ReaderView({ chapter, resume }: { chapter: ChapterContent; resume: numb
     const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent
     const m = metrics.current
     m.scrollY = contentOffset.y
+    frame.current.scrollY = contentOffset.y
     if (m.height > 0 && m.viewport > 0) progress.setValue(progressOf(m, m.scrollY))
     touch()
     autoHide(contentOffset.y, contentOffset.y + layoutMeasurement.height >= contentSize.height - 64)
+    autoScroll.check()
   }
+
+  const setTouching = (value: boolean) => () => {
+    frame.current.touching = value
+  }
+
+  /** Vị trí của một đơn vị đọc tính từ đầu nội dung cuộn */
+  const unitTop = (index: number) => {
+    const unit = units.current.get(index)
+    return unit ? metrics.current.top + body.current.y + unit.y : null
+  }
+
+  // Đoạn đang đọc luôn ở giữa màn hình (như web)
+  useEffect(() => {
+    if (!mine || player.status !== 'playing') return
+    const top = unitTop(player.paragraph)
+    const unit = units.current.get(player.paragraph)
+    if (top === null || !unit) return
+    const y = top + unit.height / 2 - metrics.current.viewport / 2
+    scroll.current?.scrollTo({ y: Math.max(0, y), animated: !reducedMotion })
+  }, [mine, player.status, player.paragraph, reducedMotion])
+
+  /** Đoạn đầu tiên còn thấy được dưới thanh công cụ (bắt đầu nghe từ đó), như web */
+  function firstVisibleParagraph() {
+    const edge = metrics.current.scrollY + insets.top + TOOLBAR_HEIGHT
+    const indexes = [...units.current.keys()].sort((a, b) => a - b)
+    for (const i of indexes) {
+      const top = unitTop(i)
+      if (top !== null && top + units.current.get(i)!.height > edge) return i
+    }
+    return 0
+  }
+
+  // Nghe truyện và tự động cuộn không chạy cùng lúc: bật cái này thì tắt cái kia (như web)
+  const listen = {
+    active: mine && listening,
+    onPress: () => {
+      if (mine && player.status === 'playing') speech.pause()
+      else if (mine && player.status === 'paused') speech.resume()
+      else {
+        autoScroll.stop()
+        speech.start(slug, number, firstVisibleParagraph())
+      }
+    },
+  }
+  const autoScrollButton = {
+    active: autoScroll.status !== 'off',
+    onPress: () => {
+      if (autoScroll.status === 'running') autoScroll.pause()
+      else if (autoScroll.status === 'paused') autoScroll.resume()
+      else {
+        // Bắt đầu tự cuộn thì ẩn thanh công cụ để đọc; chạm vào chữ để hiện lại
+        speech.stop()
+        autoScroll.start()
+        setToolbarVisible(false)
+      }
+    },
+  }
+  const barShown = autoScroll.status !== 'off' || listening
 
   const openIndex = () => setPanel('index')
   const toolbarTop = insets.top
@@ -206,18 +334,29 @@ function ReaderView({ chapter, resume }: { chapter: ChapterContent; resume: numb
         onLayout={onViewportLayout}
         onScroll={onScroll}
         scrollEventThrottle={16}
+        onScrollBeginDrag={setTouching(true)}
+        onScrollEndDrag={setTouching(false)}
+        onMomentumScrollBegin={setTouching(true)}
+        onMomentumScrollEnd={setTouching(false)}
         keyboardShouldPersistTaps="handled"
         // Bàn phím không che ô viết bình luận chương
         automaticallyAdjustKeyboardInsets
         contentContainerStyle={{
           paddingTop: toolbarTop + TOOLBAR_HEIGHT + 32,
-          paddingBottom: insets.bottom + 64,
+          // Chừa chỗ cho thanh nổi (tự cuộn, nghe truyện) để cuối trang không bị che
+          paddingBottom: insets.bottom + 64 + (barShown ? 80 : 0),
         }}
         contentContainerClassName="px-5"
       >
         <ChapterArticle
           chapter={chapter}
           onLayout={onArticleLayout}
+          onBodyLayout={(e) => {
+            body.current = { y: e.nativeEvent.layout.y, height: e.nativeEvent.layout.height }
+            frame.current.bodyHeight = e.nativeEvent.layout.height
+          }}
+          onUnitLayout={(index, y, height) => units.current.set(index, { y, height })}
+          activeParagraph={activeParagraph}
           onTap={() => setToolbarVisible((v) => !v)}
           nav={<ChapterNav chapter={chapter} onOpenIndex={openIndex} label="Chuyển chương (đầu)" />}
         />
@@ -246,6 +385,8 @@ function ReaderView({ chapter, resume }: { chapter: ChapterContent; resume: numb
         top={toolbarTop}
         onOpenIndex={openIndex}
         onOpenSettings={() => setPanel('settings')}
+        autoScroll={autoScrollButton}
+        listen={listen}
       />
       {/* Dải nền dưới thanh trạng thái: thanh công cụ trượt ẩn sau nó, chữ không chạy dưới tai thỏ */}
       <View
@@ -266,6 +407,19 @@ function ReaderView({ chapter, resume }: { chapter: ChapterContent; resume: numb
           <View className="h-full bg-primary" />
         </Animated.View>
       </View>
+      {listening && <SpeechBar />}
+      {autoScroll.status !== 'off' && (
+        <AutoScrollBar
+          autoScroll={autoScroll}
+          chapter={number}
+          next={chapter.next?.number ?? null}
+          onNext={() => {
+            if (!chapter.next) return
+            continueAutoScrollAt(slug, chapter.next.number)
+            goToChapter(slug, chapter.next.number)
+          }}
+        />
+      )}
       {resuming && (
         <ResumeNotice
           top={toolbarTop + TOOLBAR_HEIGHT + 8}

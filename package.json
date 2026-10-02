@@ -1,7 +1,7 @@
 {
   "name": "mobile-novel-platform",
   "main": "expo-router/entry",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "private": true,
   "scripts": {
     "start": "expo start",

@@ -1,8 +1,10 @@
-import { Tabs } from 'expo-router'
-import { BookMarked, Compass, House, UserRound } from 'lucide-react-native'
+import { router, Tabs } from 'expo-router'
+import { BookMarked, Compass, House, Search, UserRound } from 'lucide-react-native'
+import { Pressable } from 'react-native'
 import { SITE_NAME } from '@/config/site'
 import { useLibraryUpdateCount } from '@/features/library/hooks'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { links } from '@/lib/links'
 
 /** Bốn tab chính thay cho header + menu của web */
 export default function TabsLayout() {
@@ -33,6 +35,18 @@ export default function TabsLayout() {
             color: colors.neon,
           },
           tabBarIcon: ({ color, size }) => <House color={color} size={size} />,
+          // Nút tìm kiếm như ô tìm ở header của web
+          headerRight: () => (
+            <Pressable
+              role="button"
+              aria-label="Tìm truyện"
+              hitSlop={8}
+              onPress={() => router.push(links.search())}
+              className="mr-4 size-10 items-center justify-center rounded-full active:bg-muted"
+            >
+              <Search size={22} color={colors.foreground} />
+            </Pressable>
+          ),
         }}
       />
       <Tabs.Screen

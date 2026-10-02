@@ -93,8 +93,14 @@ export function StoryHero({ story }: { story: Story }) {
               {story.title}
             </Text>
             <Text className="text-sm" style={{ color: `${HERO.ink}cc` }}>
-              của{' '}
-              <Text className="font-heading-italic text-lg" style={{ color: HERO.ink }}>
+              của {/* Như web: bấm tên tác giả thì tìm truyện của tác giả đó */}
+              <Text
+                role="link"
+                suppressHighlighting={false}
+                onPress={() => router.push(links.search(story.author.name))}
+                className="font-heading-italic text-lg"
+                style={{ color: HERO.ink }}
+              >
                 {story.author.name}
               </Text>
             </Text>

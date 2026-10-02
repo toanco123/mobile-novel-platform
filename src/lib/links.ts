@@ -20,6 +20,8 @@ export const links = {
   genres: '/genres' as const satisfies Href,
   genre: (slug: string) => ({ pathname: '/genres/[slug]', params: { slug } }) satisfies Href,
   ranking: '/ranking' as const satisfies Href,
+  /** Tìm kiếm (/search?q= như web); bỏ trống q thì mở ô tìm */
+  search: (q?: string) => ({ pathname: '/search', params: q ? { q } : {} }) satisfies Href,
   /** Danh sách truyện theo loại như /list/:type của web */
   list: (type: ListType) => ({ pathname: '/list/[type]', params: { type } }) satisfies Href,
 }

@@ -85,6 +85,7 @@ export default function RootLayout() {
             <Stack.Screen name="genres/[slug]" options={{ headerShown: true, title: '' }} />
             <Stack.Screen name="list/[type]" options={{ headerShown: true, title: '' }} />
             <Stack.Screen name="ranking" options={{ headerShown: true, title: '' }} />
+            <Stack.Screen name="search" />
           </Stack>
           <AuthSync />
           <OfflineSync />

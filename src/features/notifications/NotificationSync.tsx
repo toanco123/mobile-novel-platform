@@ -1,11 +1,12 @@
 import { type Href, router } from 'expo-router'
-import * as Notifications from 'expo-notifications'
+import type { NotificationResponse } from 'expo-notifications'
 import { useEffect } from 'react'
 import { useSession } from '@/features/auth/hooks'
+import { Notifications } from './expoNotifications'
 import { refreshPush } from './push'
 
 // Đang mở app mà có thông báo: vẫn hiện như khi app ở nền
-Notifications.setNotificationHandler({
+Notifications?.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
     shouldShowList: true,
@@ -15,7 +16,7 @@ Notifications.setNotificationHandler({
 })
 
 /** Mở đường dẫn trong thông báo (data.url, vd /story/<slug>/chapter-<n>) */
-function openFrom(response: Notifications.NotificationResponse | null) {
+function openFrom(response: NotificationResponse | null) {
   const url = response?.notification.request.content.data?.url
   if (typeof url === 'string' && url.startsWith('/')) router.push(url as Href)
 }
@@ -29,6 +30,7 @@ export function NotificationSync() {
   const userId = user?.id
 
   useEffect(() => {
+    if (!Notifications) return
     // App được mở từ thông báo khi đang tắt
     void Notifications.getLastNotificationResponseAsync().then(openFrom)
     const subscription = Notifications.addNotificationResponseReceivedListener(openFrom)

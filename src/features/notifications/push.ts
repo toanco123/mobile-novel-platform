@@ -1,13 +1,13 @@
 // Mã thông báo của máy (Expo Push) và trạng thái bật / tắt thông báo chương mới trên máy này.
 // Expo Go không nhận thông báo đẩy từ SDK 53: cần bản build riêng (EAS); mã cần projectId của EAS
 // (`eas init` ghi vào app.json, extra.eas.projectId).
-import Constants, { ExecutionEnvironment } from 'expo-constants'
+import Constants from 'expo-constants'
 import * as Device from 'expo-device'
-import * as Notifications from 'expo-notifications'
 import { Platform } from 'react-native'
 import { create } from 'zustand'
 import { readLocal, writeLocal } from '@/lib/localStore'
 import { registerPushToken, unregisterPushToken } from './api'
+import { Notifications } from './expoNotifications'
 
 const TOKEN_KEY = 'push-token'
 
@@ -33,7 +33,7 @@ async function devicePushToken() {
   if (!Device.isDevice) {
     throw new PushUnavailableError('Máy ảo không nhận được thông báo đẩy. Hãy thử trên điện thoại.')
   }
-  if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) {
+  if (!Notifications) {
     throw new PushUnavailableError(
       'Expo Go không nhận được thông báo đẩy. Cần bản cài đặt riêng của app (bản dev hoặc bản phát hành).',
     )

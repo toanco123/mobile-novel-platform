@@ -1,10 +1,11 @@
 {
   "name": "mobile-novel-platform",
   "main": "expo-router/entry",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "private": true,
   "scripts": {
     "start": "expo start",
+    "share": "bash scripts/share.sh",
     "ios": "expo start --ios",
     "android": "expo start --android",
     "typecheck": "uniwind generate-artifacts --css ./src/global.css --dts ./src/uniwind-types.d.ts --theme reader-white --theme reader-paper --theme reader-gray --theme reader-black && tsc --noEmit",

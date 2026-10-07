@@ -13,6 +13,7 @@ Plan tổng (công nghệ, code chép từ web, màn hình, lộ trình) ở [do
 ```bash
 npm run ios            # Metro + mở app trên iOS Simulator bằng Expo Go
 npm start              # chỉ Metro (quét QR bằng Expo Go trên điện thoại)
+npm run share          # Metro + Cloudflare Tunnel: in QR exps:// cho người ở mạng khác (cần brew install cloudflared)
 npm run typecheck      # sinh kiểu Uniwind (src/uniwind-types.d.ts) rồi tsc --noEmit
 npm run lint           # oxlint
 npm run format         # prettier --write . (có plugin sắp xếp class Tailwind)

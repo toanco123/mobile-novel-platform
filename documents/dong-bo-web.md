@@ -2,7 +2,7 @@
 
 App chép (không import) một phần code của `../web-novel-platform`. Cách đồng bộ: skill `sync-from-web` (`.claude/skills/sync-from-web/SKILL.md`). Lý do và bảng tổng quan: mục 3 của `plan-app-di-dong.md`.
 
-**Mốc hiện tại:** web commit `418bb9e` (07/10/2026, nhánh `error-monitoring` của web, gộp vào `main` cùng lúc với nhánh này của app). Lần đồng bộ sau so sánh từ mốc này: `git -C ../web-novel-platform diff 418bb9e..HEAD -- ...`.
+**Mốc hiện tại:** web commit `ca06bb3` (07/10/2026, `main` của web). Lần đồng bộ sau so sánh từ mốc này: `git -C ../web-novel-platform diff ca06bb3..HEAD -- ...`. Commit web `73961f4` (tách lõi nghe truyện) chưa đồng bộ.
 
 ## Lịch sử
 
@@ -14,3 +14,4 @@ App chép (không import) một phần code của `../web-novel-platform`. Cách
 | 07/10/2026 | `c548b9b` | Nhận ra tài khoản Apple (`AuthProvider` thêm `'apple'`): chép `types/user.ts`, `auth/shared.ts`; áp diff `toUser` ở `auth/api.ts` và tên provider ở `ChangePasswordForm`. Đăng nhập Apple (`signInWithApple`) là code riêng của app |
 | 07/10/2026 | `88cc3cd` | Web có giao diện chặn người dùng (`features/blocks`): `blocks/api.ts` của app chuyển thành bản chép từ `api.remote.ts` của web (thêm `export * from './shared'`), chép `blocks/shared.ts` (`cannotBlockSelf`) |
 | 07/10/2026 | `418bb9e` | Theo dõi lỗi bằng Sentry: chép `lib/errorFilter.ts` (lọc lỗi dự kiến, ẩn token; thêm `PushUnavailableError` của app vào danh sách ở web). Test của app viết riêng (mock NetInfo). `monitoring.ts`, `ErrorBoundary` là code riêng của app |
+| 07/10/2026 | `ca06bb3` | Điểm danh và phiếu đề cử: migration `checkin_and_votes` làm ở web, `npm run gen:types`; chép `rewards/shared.ts`, `rewards/hooks.ts`, `rewards/api.ts` (từ `api.remote.ts`), `lib/errorFilter.ts` (thêm `RewardError`), `lib/routes.ts` (`rewards`, `rankingVotes`), `stories/shared.ts` (`RankingCriterion` có `votes`). Giao diện điểm danh của app tự viết (`CheckInHeaderButton`, `CheckInCard`, màn `rewards`) |

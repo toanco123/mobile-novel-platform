@@ -23,6 +23,7 @@ describe('shouldReport', () => {
     expect(shouldReport(named('AuthError', 'invalid_credentials'))).toBe(false)
     expect(shouldReport(named('ChapterNotSavedError'))).toBe(false)
     expect(shouldReport(named('PushUnavailableError'))).toBe(false)
+    expect(shouldReport(named('RewardError', 'already_checked_in'))).toBe(false)
     expect(shouldReport(named('AuthError', 'unknown'))).toBe(true)
   })
 

@@ -1,6 +1,7 @@
 import { router, Tabs } from 'expo-router'
 import { BookMarked, Compass, House, Search, UserRound } from 'lucide-react-native'
 import { Pressable } from 'react-native'
+import { OfflineBannerLayout } from '@/components/common/OfflineBanner'
 import { SITE_NAME } from '@/config/site'
 import { useLibraryUpdateCount } from '@/features/library/hooks'
 import { useThemeColors } from '@/hooks/useThemeColors'
@@ -12,6 +13,8 @@ export default function TabsLayout() {
   const { data: updates = 0 } = useLibraryUpdateCount()
   return (
     <Tabs
+      // Mất mạng thì có dải báo ngay trên thanh tab, ở mọi tab
+      screenLayout={({ children }) => <OfflineBannerLayout>{children}</OfflineBannerLayout>}
       screenOptions={{
         headerStyle: { backgroundColor: colors.background },
         headerShadowVisible: false,

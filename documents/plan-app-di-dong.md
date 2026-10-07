@@ -9,7 +9,7 @@ Web đọc truyện (`web-novel-platform`) đã chạy ổn trên Supabase. Mụ
 - **Backend:** cùng project Supabase với web. Mọi thay đổi DB (migration, RLS, RPC) vẫn làm ở web; app chỉ đọc và sinh lại kiểu.
 - **Công nghệ:** React Native + Expo (TypeScript), để dùng lại cách viết và phần logic của web (React, TanStack Query, Zustand, zod, react-hook-form).
 
-**Trạng thái:** Bước 0 ✅ (01/10/2026). Bước 1 ✅ trừ đăng nhập Apple (01/10/2026, plan riêng: `plan-dang-nhap-va-tai-khoan.md`). Bước 2 ✅ (01/10/2026, chia 2a trang chủ, 2b chi tiết truyện, 2c trang đọc từng chương: `plan-trang-chu-va-doc-truyen.md`). Bước 3 ✅ (01/10/2026, chia 3a tủ truyện, 3b kho chương trên máy, 3c tải về đọc offline: `plan-tu-truyen-va-offline.md`). Bước 4 ✅ (02/10/2026, chia 4a khám phá, 4b tìm kiếm, 4c bình luận và báo cáo, 4d chặn người dùng: `plan-kham-pha-va-tuong-tac.md`). Bước 5 đang làm (chia 5a–5d: `plan-doc-nang-cao-va-phat-hanh.md`).
+**Trạng thái:** Bước 0 ✅ (01/10/2026). Bước 1 ✅ trừ đăng nhập Apple (01/10/2026, plan riêng: `plan-dang-nhap-va-tai-khoan.md`). Bước 2 ✅ (01/10/2026, chia 2a trang chủ, 2b chi tiết truyện, 2c trang đọc từng chương: `plan-trang-chu-va-doc-truyen.md`). Bước 3 ✅ (01/10/2026, chia 3a tủ truyện, 3b kho chương trên máy, 3c tải về đọc offline: `plan-tu-truyen-va-offline.md`). Bước 4 ✅ (02/10/2026, chia 4a khám phá, 4b tìm kiếm, 4c bình luận và báo cáo, 4d chặn người dùng: `plan-kham-pha-va-tuong-tac.md`). Bước 5 đang làm (chia 5a–5e: `plan-doc-nang-cao-va-phat-hanh.md`; còn 5d và đăng nhập Apple, chờ tài khoản nhà phát triển).
 
 ---
 

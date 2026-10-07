@@ -38,6 +38,7 @@ npx expo install <gói> # cài thư viện: luôn dùng lệnh này để lấy 
   - Chặn người dùng (App Store Guideline 1.2): `features/blocks` là code riêng của app (web chưa có giao diện). Bảng `user_blocks` và policy ẩn bình luận của người mình đã chặn nằm ở migration của web; client không tự lọc bình luận.
   - Thông báo chương mới: `features/notifications` (riêng của app). Bảng `push_tokens` và trigger gửi qua Expo Push (pg_net) ở migration của web. Expo Go và máy ảo không nhận thông báo đẩy: cần bản build riêng và `extra.eas.projectId` (`eas init`).
   - Kho chương đọc offline: `features/offline/store.ts` dùng SQLite (expo-sqlite, mở ở `sqlite.ts`) thay IndexedDB của web, cùng tên hàm và hành vi. `store.test.ts` chạy test của web trên `node:sqlite` (Node 24) bằng cách mock `./sqlite`; sửa câu SQL thì chạy lại test này.
+  - Mất mạng: dải `OfflineBanner` gắn qua `screenLayout` của `Stack` gốc và `Tabs`, nên màn mới tự có. Màn không cần mạng (như trang đọc) thì thêm tên route vào `NO_OFFLINE_BANNER` (`src/app/_layout.tsx`).
   - Nội dung chương: `features/chapters/richText.ts` đọc HTML bằng htmlparser2 (web dùng DOMParser). Test của web chạy nguyên văn để bảo đảm hai bản giống nhau. Không bao giờ render HTML thô (không dùng WebView cho nội dung chương).
 - **State client**: Zustand. Theme ở `src/hooks/useTheme.ts` (key `theme`, mặc định tối, gọi `Uniwind.setTheme`). Dữ liệu server luôn ở TanStack Query.
 

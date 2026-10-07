@@ -11,6 +11,7 @@ import {
 } from 'react-native'
 import { PlaceholderScreen } from '@/components/common/PlaceholderScreen'
 import { SectionHeading } from '@/components/common/SectionHeading'
+import { ShareButton } from '@/components/common/ShareButton'
 import { Button } from '@/components/ui/button'
 import { ChapterList } from '@/features/chapters/components/ChapterList'
 import { CommentsSection } from '@/features/comments/components/CommentsSection'
@@ -27,6 +28,7 @@ import {
   useStory,
 } from '@/features/stories/hooks'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { paths } from '@/lib/routes'
 import type { ChapterOrder } from '@/types/chapter'
 import type { Story } from '@/types/story'
 
@@ -130,7 +132,18 @@ function StoryDetail({ story }: { story: Story }) {
 
   return (
     <>
-      <Stack.Screen options={{ title: story.title }} />
+      <Stack.Screen
+        options={{
+          title: story.title,
+          headerRight: () => (
+            <ShareButton
+              label="Chia sẻ truyện"
+              title={story.title}
+              path={paths.story(story.slug)}
+            />
+          ),
+        }}
+      />
       <ScrollView
         ref={scroll}
         className="flex-1 bg-background"

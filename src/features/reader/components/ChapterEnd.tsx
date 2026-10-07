@@ -1,15 +1,20 @@
 import { router } from 'expo-router'
-import { ArrowRight, BookOpen } from 'lucide-react-native'
+import { ArrowRight, BookOpen, Share2 } from 'lucide-react-native'
 import { Pressable, View } from 'react-native'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
 import { FollowButton } from '@/features/library/components/FollowButton'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { links } from '@/lib/links'
+import { paths } from '@/lib/routes'
+import { shareLink } from '@/lib/share'
 import type { ChapterContent } from '@/types/chapter'
 import { goToChapter } from '../navigation'
 
-/** Như ChapterEnd của web: mời đọc chương kế, hoặc báo đã đọc tới chương mới nhất */
+/**
+ * Như ChapterEnd của web: mời đọc chương kế, hoặc báo đã đọc tới chương mới nhất. Thêm nút chia sẻ
+ * chương (riêng của app: thanh công cụ đọc không còn chỗ)
+ */
 export function ChapterEnd({ chapter }: { chapter: ChapterContent }) {
   const { story, next } = chapter
   const colors = useThemeColors()
@@ -57,6 +62,21 @@ export function ChapterEnd({ chapter }: { chapter: ChapterContent }) {
           </View>
         </View>
       )}
+
+      <Button
+        variant="ghost"
+        icon={<Share2 size={16} color={colors.mutedForeground} />}
+        onPress={() =>
+          shareLink({
+            title: `${story.title} - ${chapter.title ? `Chương ${chapter.number}: ${chapter.title}` : `Chương ${chapter.number}`}`,
+            path: paths.chapter(story.slug, chapter.number),
+          })
+        }
+        className="mt-4 h-10 rounded-full px-4"
+        textClassName="text-sm text-muted-foreground"
+      >
+        Chia sẻ chương
+      </Button>
     </View>
   )
 }

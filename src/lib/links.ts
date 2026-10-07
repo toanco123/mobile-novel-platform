@@ -22,6 +22,8 @@ export const links = {
   ranking: '/ranking' as const satisfies Href,
   /** Tìm kiếm (/search?q= như web); bỏ trống q thì mở ô tìm */
   search: (q?: string) => ({ pathname: '/search', params: q ? { q } : {} }) satisfies Href,
+  /** Tab "Đã lưu" của tủ truyện (paths.savedChapters của web): chương đọc được khi không có mạng */
+  savedChapters: { pathname: '/library', params: { tab: 'saved' } } as const satisfies Href,
   /** Danh sách truyện theo loại như /list/:type của web */
   list: (type: ListType) => ({ pathname: '/list/[type]', params: { type } }) satisfies Href,
 }

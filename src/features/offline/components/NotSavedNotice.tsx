@@ -4,6 +4,7 @@ import { View } from 'react-native'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { links } from '@/lib/links'
 
 /** Như NotSavedNotice của web: mất mạng mà chương chưa được lưu (trang đọc) */
 export function NotSavedNotice({ number, onRetry }: { number: number; onRetry: () => void }) {
@@ -21,7 +22,7 @@ export function NotSavedNotice({ number, onRetry }: { number: number; onRetry: (
         </Button>
         <Button
           variant="outline"
-          onPress={() => router.navigate({ pathname: '/library', params: { tab: 'saved' } })}
+          onPress={() => router.navigate(links.savedChapters)}
           className="h-11 rounded-full px-5"
           textClassName="text-sm"
         >

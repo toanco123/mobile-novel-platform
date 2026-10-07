@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar'
 import { useEffect } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { Toaster } from 'sonner-native'
+import { OfflineBannerLayout } from '@/components/common/OfflineBanner'
 import { AuthSync } from '@/features/auth/components/AuthSync'
 import { OfflineSync } from '@/features/library/components/OfflineSync'
 import { NotificationSync } from '@/features/notifications/NotificationSync'
@@ -19,6 +20,12 @@ SplashScreen.preventAutoHideAsync()
 
 // Mở app thẳng từ deep link (link trong email) thì vẫn có thanh tab bên dưới màn đăng nhập
 export const unstable_settings = { anchor: '(tabs)' }
+
+/**
+ * Màn không có dải báo mất mạng: nhóm tab tự có dải trên thanh tab, các màn đăng nhập báo lỗi mạng
+ * ngay trong form, trang đọc vẫn đọc được chương đã lưu (chưa lưu thì có NotSavedNotice)
+ */
+const NO_OFFLINE_BANNER = new Set(['(tabs)', '(auth)', 'story/[slug]/[chapter]'])
 
 /** Màu nền, header... của thư viện điều hướng lấy theo token của theme hiện tại */
 function useNavigationTheme() {
@@ -57,6 +64,13 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={navigationTheme}>
           <Stack
+            screenLayout={({ route, children }) =>
+              NO_OFFLINE_BANNER.has(route.name) ? (
+                children
+              ) : (
+                <OfflineBannerLayout safeBottom>{children}</OfflineBannerLayout>
+              )
+            }
             screenOptions={{
               headerShown: false,
               headerStyle: { backgroundColor: colors.background },
@@ -92,6 +106,7 @@ export default function RootLayout() {
             <Stack.Screen name="ranking" options={{ headerShown: true, title: '' }} />
             <Stack.Screen name="search" />
             <Stack.Screen name="contact" options={{ headerShown: true, title: '' }} />
+            <Stack.Screen name="+not-found" options={{ headerShown: true, title: '' }} />
           </Stack>
           <AuthSync />
           <OfflineSync />

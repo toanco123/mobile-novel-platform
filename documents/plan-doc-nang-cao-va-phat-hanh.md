@@ -9,6 +9,7 @@ Bước 5 của `plan-app-di-dong.md`, chia nhỏ (02/10/2026):
 | **5b** | Cuộn liên tục (hết chương thì nối chương sau) | ✅ (02/10/2026) |
 | **5c** | Thông báo chương mới (expo-notifications, bảng `push_tokens` + gửi qua Expo Push, migration ở web): hỏi người dùng trước | ✅ code (02/10/2026); chờ tài khoản Expo / Apple / Firebase để gửi thật |
 | **5d** | Icon, splash, Universal Links / App Links, EAS Build, TestFlight, Google Play: cần tài khoản nhà phát triển, chốt bundle id | chưa làm |
+| **5e** | Bù chỗ còn chênh với web, không cần tài khoản: dải báo mất mạng, màn 404, chia sẻ truyện / chương | ✅ (07/10/2026, chưa kiểm trên máy ảo) |
 
 Bước 4 ghi nhận thêm: nhánh `user-blocks` của web đã gộp vào `main` (`0d80654`, 02/10/2026).
 
@@ -52,3 +53,13 @@ Người dùng chọn viết code trước, gửi / nhận thật để sau khi 
 - **App:** `features/notifications/` (api, `push.ts`: xin quyền, lấy mã Expo, đăng ký / gỡ; `NotificationSync`: bấm thông báo thì mở đúng chương, cả khi app đang tắt; mở app khi đang bật thì đăng ký lại mã). Tab Tài khoản: công tắc "Thông báo chương mới" (đã đăng nhập); đăng xuất thì gỡ mã của máy trước. Plugin `expo-notifications` trong `app.json`.
 - **Chưa gửi / nhận thật được:** Expo Go không nhận thông báo đẩy (SDK 53+), máy ảo cũng không; cần `eas init` (tài khoản Expo, ghi `extra.eas.projectId`), bản build riêng, khóa APNs (Apple Developer) cho iOS và Firebase (FCM) cho Android. Thiếu thì công tắc báo lời giải thích.
 - Chưa làm: xử lý biên nhận của Expo (xóa mã hết hạn `DeviceNotRegistered`); web chưa có giao diện thông báo.
+
+---
+
+## 5e. Bù chỗ còn chênh với web
+Rà lại app so với web (07/10/2026): mọi trang người đọc đã có màn tương ứng; web chưa có thay đổi mới từ mốc đồng bộ. Còn đăng nhập Apple và 5d (cần tài khoản trả phí, để sau). Làm trước ba việc nhỏ:
+
+- **Dải báo mất mạng** (`components/common/OfflineBanner.tsx`, như `OfflineBanner` của web): "Bạn đang offline. Xem truyện đã lưu". Web đặt dưới header; app đặt dưới cùng thân màn bằng `screenLayout` của navigator để không đụng header: `Tabs` (ngay trên thanh tab) và `Stack` gốc (sát mép dưới, chừa thanh home). Không hiện ở nhóm tab trong `Stack` gốc (tab tự có), `(auth)` và trang đọc (`NO_OFFLINE_BANNER` ở `src/app/_layout.tsx`). `links.savedChapters` dùng chung với `NotSavedNotice`.
+- **Màn 404** (`src/app/+not-found.tsx`, như `NotFound` của web): link mở vào app mà app không có màn (Sáng tác, Quản trị, link cũ) thì có "Về trang chủ" và "Mở trên web" (mở đúng đường dẫn đó). Cần khi bật Universal Links ở 5d.
+- **Chia sẻ** (riêng của app, web không có): `shareLink` (`lib/share.ts`) mở bảng chia sẻ của máy với link web (`SITE_URL` + `paths`). Nút ở header chi tiết truyện (`ShareButton`) và "Chia sẻ chương" ở cuối chương (`ChapterEnd`; thanh công cụ đọc không còn chỗ).
+- Kiểm: typecheck, lint, 73 test, đóng gói iOS. Chưa kiểm trên máy ảo (bật / tắt mạng của máy ảo để xem dải, mở `webtruyen://studio` để xem màn 404).

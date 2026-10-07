@@ -1,9 +1,15 @@
+import {
+  AppleAuthenticationButton,
+  AppleAuthenticationButtonStyle as ButtonStyle,
+  AppleAuthenticationButtonType as ButtonType,
+} from 'expo-apple-authentication'
 import { View } from 'react-native'
 import Svg, { Path } from 'react-native-svg'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
-import { type SocialProvider, socialProviders } from '../api'
-import { authErrorMessage, useSignInWithProvider } from '../hooks'
+import { useTheme } from '@/hooks/useTheme'
+import { appleSignInEnabled, type SocialProvider, socialProviders } from '../api'
+import { authErrorMessage, useSignInWithApple, useSignInWithProvider } from '../hooks'
 import { FormAlert } from './FormAlert'
 
 // Chỉ hiện provider đã bật (EXPO_PUBLIC_AUTH_PROVIDERS, xem socialProviders trong api.ts)
@@ -22,7 +28,7 @@ type Props = {
 
 /** Các nút đăng nhập mạng xã hội kèm vạch "hoặc"; không có provider nào thì không hiện gì */
 export function SocialButtons(props: Props) {
-  if (!providers.length) return null
+  if (!providers.length && !appleSignInEnabled) return null
   return (
     <>
       <ProviderButtons {...props} />
@@ -33,22 +39,71 @@ export function SocialButtons(props: Props) {
 
 function ProviderButtons({ verb, onSuccess, disabled }: Props) {
   const mutation = useSignInWithProvider()
+  const apple = useSignInWithApple()
+  const busy = mutation.isPending || apple.isPending
+  const error = mutation.error ?? apple.error
   return (
     <View className="gap-3">
-      {mutation.isError && <FormAlert>{authErrorMessage(mutation.error)}</FormAlert>}
+      {error && <FormAlert>{authErrorMessage(error)}</FormAlert>}
+      {appleSignInEnabled && (
+        <AppleButton
+          verb={verb}
+          disabled={disabled || busy}
+          onPress={() => {
+            mutation.reset()
+            apple.mutate(undefined, { onSuccess: (user) => user && onSuccess() })
+          }}
+        />
+      )}
       {providers.map(({ id, name, Logo }) => (
         <Button
           key={id}
           variant="outline"
           icon={<Logo />}
           pending={mutation.isPending && mutation.variables === id}
-          disabled={disabled || mutation.isPending}
+          disabled={disabled || busy}
           // null: người dùng đóng trình duyệt, ở lại màn đăng nhập
-          onPress={() => mutation.mutate(id, { onSuccess: (user) => user && onSuccess() })}
+          onPress={() => {
+            apple.reset()
+            mutation.mutate(id, { onSuccess: (user) => user && onSuccess() })
+          }}
         >
           {`${verb} với ${name}`}
         </Button>
       ))}
+    </View>
+  )
+}
+
+/**
+ * Nút gốc của Apple (đúng hướng dẫn giao diện Apple yêu cầu khi duyệt app): chữ do hệ thống viết theo
+ * ngôn ngữ của app, nền trắng trên theme tối, đen trên theme sáng. Cao, bo góc như Button.
+ */
+function AppleButton({
+  verb,
+  disabled,
+  onPress,
+}: {
+  verb: Props['verb']
+  disabled: boolean
+  onPress: () => void
+}) {
+  const theme = useTheme((s) => s.theme)
+  return (
+    <View
+      pointerEvents={disabled ? 'none' : 'auto'}
+      className={disabled ? 'opacity-60' : undefined}
+    >
+      <AppleAuthenticationButton
+        // Kiểu và màu của nút gốc (ASAuthorizationAppleIDButton) chỉ đặt được lúc tạo: đổi theme thì dựng lại
+        key={theme}
+        buttonType={verb === 'Đăng ký' ? ButtonType.SIGN_UP : ButtonType.SIGN_IN}
+        buttonStyle={theme === 'dark' ? ButtonStyle.WHITE : ButtonStyle.BLACK}
+        cornerRadius={8}
+        // Nút gốc phải có cả chiều cao và chiều rộng mới hiện
+        style={{ height: 48, width: '100%' }}
+        onPress={onPress}
+      />
     </View>
   )
 }

@@ -9,7 +9,7 @@ Web đọc truyện (`web-novel-platform`) đã chạy ổn trên Supabase. Mụ
 - **Backend:** cùng project Supabase với web. Mọi thay đổi DB (migration, RLS, RPC) vẫn làm ở web; app chỉ đọc và sinh lại kiểu.
 - **Công nghệ:** React Native + Expo (TypeScript), để dùng lại cách viết và phần logic của web (React, TanStack Query, Zustand, zod, react-hook-form).
 
-**Trạng thái:** Bước 0 ✅ (01/10/2026). Bước 1 ✅ trừ đăng nhập Apple (01/10/2026, plan riêng: `plan-dang-nhap-va-tai-khoan.md`). Bước 2 ✅ (01/10/2026, chia 2a trang chủ, 2b chi tiết truyện, 2c trang đọc từng chương: `plan-trang-chu-va-doc-truyen.md`). Bước 3 ✅ (01/10/2026, chia 3a tủ truyện, 3b kho chương trên máy, 3c tải về đọc offline: `plan-tu-truyen-va-offline.md`). Bước 4 ✅ (02/10/2026, chia 4a khám phá, 4b tìm kiếm, 4c bình luận và báo cáo, 4d chặn người dùng: `plan-kham-pha-va-tuong-tac.md`). Bước 5 đang làm (chia 5a–5e: `plan-doc-nang-cao-va-phat-hanh.md`; còn 5d và đăng nhập Apple, chờ tài khoản nhà phát triển).
+**Trạng thái:** Bước 0 ✅ (01/10/2026). Bước 1 ✅ (01/10/2026; đăng nhập Apple có code 07/10/2026, chờ bật provider; plan riêng: `plan-dang-nhap-va-tai-khoan.md`). Bước 2 ✅ (01/10/2026, chia 2a trang chủ, 2b chi tiết truyện, 2c trang đọc từng chương: `plan-trang-chu-va-doc-truyen.md`). Bước 3 ✅ (01/10/2026, chia 3a tủ truyện, 3b kho chương trên máy, 3c tải về đọc offline: `plan-tu-truyen-va-offline.md`). Bước 4 ✅ (02/10/2026, chia 4a khám phá, 4b tìm kiếm, 4c bình luận và báo cáo, 4d chặn người dùng: `plan-kham-pha-va-tuong-tac.md`). Bước 5 đang làm (chia 5a–5e: `plan-doc-nang-cao-va-phat-hanh.md`; còn 5d, chờ tài khoản nhà phát triển).
 
 ---
 
@@ -117,7 +117,7 @@ mobile-novel-platform/
 - 4 tab với màn hình tạm; Trang chủ gọi thử `getGenres` để kiểm tra kết nối Supabase; tab Tài khoản có nút đổi theme.
 - `npm run typecheck`, `lint`, `test`, `npx expo export --platform ios` đều qua.
 
-### Bước 1: Nền giao diện + đăng nhập ✅ trừ Apple (01/10/2026, chi tiết: `plan-dang-nhap-va-tai-khoan.md`)
+### Bước 1: Nền giao diện + đăng nhập ✅ (01/10/2026; Apple 07/10/2026, chi tiết: `plan-dang-nhap-va-tai-khoan.md`)
 - Thành phần cơ bản trong `components/ui/`: Text, Button, Input, FormField (nhãn, lỗi, `aria` như web), Skeleton, EmptyState.
 - `AuthSync` (như web), hook `useSession` cùng key `['auth', 'session']`.
 - Màn hình đăng nhập, đăng ký, quên mật khẩu, đặt lại mật khẩu, `auth/callback` (deep link gọi `completeAuthRedirect(url)`).

@@ -83,6 +83,17 @@ export function useSignInWithProvider() {
   })
 }
 
+/** Đăng nhập Apple (riêng của app); kết quả null (người dùng đóng bảng) thì không làm gì */
+export function useSignInWithApple() {
+  const setSession = useSetSession()
+  return useMutation({
+    mutationFn: api.signInWithApple,
+    onSuccess: (user) => {
+      if (user) setSession(user)
+    },
+  })
+}
+
 export function useSignOut() {
   const setSession = useSetSession()
   return useMutation({ mutationFn: api.signOut, onSuccess: () => setSession(null) })

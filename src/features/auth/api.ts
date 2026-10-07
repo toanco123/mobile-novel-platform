@@ -4,9 +4,13 @@
 // Chép từ web (src/features/auth/api.remote.ts + api.ts). Khác web: link trong email và đăng nhập
 // Google/Facebook quay về app qua deep link (appUrl) chứ không về trang web, vì mã PKCE chỉ đổi
 // được phiên trên đúng máy đã gửi yêu cầu; app tự đổi ?code= trong completeAuthRedirect(url).
-import { isAuthApiError, type Session } from '@supabase/supabase-js'
+// Riêng của app: đăng nhập Apple (signInWithApple, appleSignInEnabled).
+import { isAuthApiError, type Session, type User as AuthUser } from '@supabase/supabase-js'
+import * as AppleAuthentication from 'expo-apple-authentication'
+import * as Crypto from 'expo-crypto'
 import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
+import { Platform } from 'react-native'
 import { unwrap } from '@/lib/dbError'
 import {
   imagePathFromUrl,
@@ -29,6 +33,7 @@ import {
   unauthenticated,
   type WithCaptcha,
 } from './shared'
+import { profileSchema } from './schemas'
 
 export * from './shared'
 
@@ -138,7 +143,8 @@ function toUser(session: Session, profile: Profile): User {
     email: session.user.email ?? '',
     displayName: profile.displayName,
     avatarUrl: profile.avatarUrl,
-    provider: provider === 'google' || provider === 'facebook' ? provider : 'email',
+    provider:
+      provider === 'google' || provider === 'facebook' || provider === 'apple' ? provider : 'email',
     // app_metadata chỉ sửa được bằng quyền quản trị DB (cách cấp: thiet-ke-database.md)
     isAdmin: session.user.app_metadata.role === 'admin',
   }
@@ -282,6 +288,60 @@ export async function signInWithProvider(provider: SocialProvider): Promise<User
   return completeAuthRedirect(redirectParams(result.url))
 }
 
+/**
+ * Đăng nhập Apple (riêng của app, chỉ iOS; App Store bắt buộc khi có đăng nhập Google/Facebook):
+ * bảng của hệ thống trả id token, đổi lấy phiên bằng signInWithIdToken, không qua trình duyệt hay deep
+ * link. null nếu người dùng đóng bảng. Supabase phải bật provider Apple với Client IDs là bundle id
+ * của app (thử bằng Expo Go thì thêm host.exp.Exponent).
+ */
+export async function signInWithApple(): Promise<User | null> {
+  // Apple ký bản băm của nonce vào id token, Supabase so với nonce gốc để token không dùng lại được
+  const nonce = Crypto.randomUUID()
+  let credential: AppleAuthentication.AppleAuthenticationCredential
+  try {
+    credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+      nonce: await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, nonce),
+    })
+  } catch (error) {
+    if ((error as { code?: string }).code === 'ERR_REQUEST_CANCELED') return null
+    throw appleFailed()
+  }
+  if (!credential.identityToken) throw appleFailed()
+  cachedProfile = null
+  const { data, error } = await db().auth.signInWithIdToken({
+    provider: 'apple',
+    token: credential.identityToken,
+    nonce,
+  })
+  if (error) throw authError(error)
+  await saveAppleName(data.user, credential.fullName)
+  return userOf(data.session)
+}
+
+const appleFailed = () => new AuthError('unknown', 'Không đăng nhập được bằng Apple. Thử lại sau.')
+
+/**
+ * Apple không đưa họ tên vào id token (trigger của DB đành lấy phần trước @ của email, thường là địa
+ * chỉ ẩn kiểu abc123@privaterelay.appleid.com) và chỉ gửi tên ở lần cho phép đầu tiên: có tên thì ghi
+ * vào hồ sơ. Chỉ với tài khoản chỉ có Apple, để không đè tên người dùng email/Google đã đặt. Lỗi thì
+ * bỏ qua: tên đổi được ở Hồ sơ.
+ */
+async function saveAppleName(
+  user: AuthUser,
+  fullName: AppleAuthentication.AppleAuthenticationFullName | null,
+) {
+  if (!fullName || user.identities?.some((i) => i.provider !== 'apple')) return
+  const parsed = profileSchema.safeParse({
+    displayName: AppleAuthentication.formatFullName(fullName),
+  })
+  if (!parsed.success) return
+  await db().from('profiles').update({ display_name: parsed.data.displayName }).eq('id', user.id)
+}
+
 /** Không báo email có tồn tại hay không (Supabase cũng không báo) */
 export async function sendPasswordReset({ email, captchaToken }: { email: string } & WithCaptcha) {
   const { error } = await db().auth.resetPasswordForEmail(normalizeEmail(email), {
@@ -417,3 +477,8 @@ export async function requireUserId() {
 export const socialProviders: SocialProvider[] = parseSocialProviders(
   process.env.EXPO_PUBLIC_AUTH_PROVIDERS,
 )
+
+/** Nút Apple: chỉ trên iOS, khi đã bật provider Apple trên Supabase ("apple" trong EXPO_PUBLIC_AUTH_PROVIDERS) */
+export const appleSignInEnabled =
+  Platform.OS === 'ios' &&
+  (process.env.EXPO_PUBLIC_AUTH_PROVIDERS ?? '').split(',').some((s) => s.trim() === 'apple')

@@ -11,7 +11,7 @@ import { FormAlert } from './FormAlert'
 import { PasswordField } from './FormFields'
 import { PasswordStrength } from './PasswordStrength'
 
-const providerName = { google: 'Google', facebook: 'Facebook' } as const
+const providerName = { google: 'Google', facebook: 'Facebook', apple: 'Apple' } as const
 
 export function ChangePasswordForm({ user }: { user: User }) {
   const change = useChangePassword()

@@ -6,7 +6,7 @@ declare namespace NodeJS {
   interface ProcessEnv {
     EXPO_PUBLIC_SUPABASE_URL?: string
     EXPO_PUBLIC_SUPABASE_ANON_KEY?: string
-    /** Nút đăng nhập mạng xã hội được hiện, vd "google, facebook" (như VITE_AUTH_PROVIDERS) */
+    /** Nút đăng nhập mạng xã hội được hiện, vd "google, facebook, apple" (như VITE_AUTH_PROVIDERS; apple chỉ iOS) */
     EXPO_PUBLIC_AUTH_PROVIDERS?: string
     /** Site key Cloudflare Turnstile (như VITE_TURNSTILE_SITE_KEY); bỏ trống = không có captcha */
     EXPO_PUBLIC_TURNSTILE_SITE_KEY?: string

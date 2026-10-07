@@ -9,7 +9,7 @@ Bước 1 của `plan-app-di-dong.md`. Web đã có đăng nhập/đăng ký/qu�
 
 Kiểm tra trước khi làm: Supabase Auth đang **bật captcha** (gọi đăng nhập không kèm mã trả `captcha_failed`), nên form email bắt buộc có Turnstile.
 
-**Trạng thái:** ✅ Xong trừ đăng nhập Apple (01/10/2026). Kết quả kiểm tra ở mục 6.
+**Trạng thái:** ✅ (01/10/2026). Đăng nhập Apple: ✅ code (07/10/2026, mục 2b), chưa bật provider trên Supabase nên chưa chạy thật. Kết quả kiểm tra ở mục 6.
 
 ---
 
@@ -31,6 +31,16 @@ Root layout có `unstable_settings.anchor = '(tabs)'` để mở app thẳng t�
 
 ## 2. Đăng nhập Google (và provider khác)
 `signInWithProvider` mở trang Google trong trình duyệt của app (`WebBrowser.openAuthSessionAsync`), quay về `webtruyen://auth/callback` (Expo Go: `exp://.../--/auth/callback`) rồi đổi mã lấy phiên ngay trong hàm. Người dùng đóng trình duyệt thì không báo lỗi. Cần thêm hai địa chỉ này vào **Supabase → Authentication → Redirect URLs** (mục 6 của plan tổng).
+
+## 2b. Đăng nhập Apple (07/10/2026)
+App Store bắt buộc có khi app có đăng nhập Google/Facebook (Guideline 4.8). Chỉ iOS.
+
+- **Web (commit `761334f`, gộp `c548b9b`):** `AuthProvider` thêm `'apple'`, `toUser` nhận ra tài khoản Apple (trước đó bị coi là tài khoản email nên đổi mật khẩu / xóa tài khoản sẽ đòi mật khẩu). Web chưa có nút Apple: `SOCIAL_PROVIDERS` giữ Google, Facebook.
+- **App:** `signInWithApple` (`features/auth/api.ts`, riêng của app): bảng của hệ thống (`expo-apple-authentication`, nonce băm SHA-256 bằng expo-crypto) trả id token, đổi phiên bằng `signInWithIdToken`, không qua trình duyệt / deep link. Đóng bảng thì không báo lỗi. Apple không đưa họ tên vào id token và chỉ gửi tên ở lần đầu: tài khoản chỉ có Apple thì ghi tên đó vào hồ sơ (qua `profileSchema`), thay tên trigger lấy từ email ẩn `@privaterelay.appleid.com`.
+- Nút: `AppleAuthenticationButton` gốc của Apple (đúng hướng dẫn giao diện khi duyệt app), đứng đầu `SocialButtons`, "Sign in"/"Sign up" theo màn, trắng trên theme tối, đen trên theme sáng. Chỉ hiện trên iOS khi `EXPO_PUBLIC_AUTH_PROVIDERS` có `apple` (`appleSignInEnabled`).
+- `app.json`: plugin `expo-apple-authentication`, `ios.usesAppleSignIn`.
+- **Để chạy thật:** Supabase → Authentication → Providers → Apple: bật, **Client IDs** = bundle id (`com.webtruyen.app`) và `host.exp.Exponent` (thử bằng Expo Go). Đăng nhập bằng id token gốc chỉ cần Client IDs, không cần Secret Key (chỉ dùng cho đăng nhập Apple trên web). Rồi thêm `apple` vào `EXPO_PUBLIC_AUTH_PROVIDERS`. Bản build riêng cần App ID bật "Sign in with Apple" (Apple Developer, bước 5d).
+- **Còn lại khi phát hành:** xóa tài khoản đăng nhập bằng Apple phải thu hồi token với Apple (Guideline 5.1.1(v)): cần khóa `.p8` của Apple Developer và một Edge Function gọi `appleid.apple.com/auth/revoke`. Chữ trên nút gốc theo ngôn ngữ của app (bản build mặc định tiếng Anh): kiểm ở 5d, cần thì đặt `CFBundleDevelopmentRegion` = `vi`.
 
 ## 3. Captcha (Cloudflare Turnstile)
 - `useCaptcha()` cùng API với web (`element`, `token()`, `reset()`), dùng ở đăng nhập, đăng ký, quên mật khẩu, đổi mật khẩu, xóa tài khoản (tài khoản email).

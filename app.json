@@ -10,7 +10,8 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.webtruyen.app",
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.webtruyen.app",
@@ -33,6 +34,7 @@
         }
       ],
       "expo-sqlite",
+      "expo-apple-authentication",
       "expo-notifications",
       [
         "expo-image-picker",

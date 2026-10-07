@@ -1,8 +1,17 @@
 import NetInfo from '@react-native-community/netinfo'
-import { onlineManager, QueryClient } from '@tanstack/react-query'
+import { MutationCache, onlineManager, QueryCache, QueryClient } from '@tanstack/react-query'
+import { reportError } from './monitoring'
 
-// Cùng mặc định với web (src/app/providers.tsx)
+// Cùng mặc định với web (src/app/queryClient.ts): query/mutation lỗi (sau khi đã thử lại) đều qua
+// reportError; lỗi nghiệp vụ, lỗi mạng bị lọc ở đó
 export const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error, query) => reportError(error, { queryKey: query.queryKey }),
+  }),
+  mutationCache: new MutationCache({
+    onError: (error, _variables, _context, mutation) =>
+      reportError(error, { mutationKey: mutation.options.mutationKey }),
+  }),
   defaultOptions: {
     queries: {
       staleTime: 60_000,

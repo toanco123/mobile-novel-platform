@@ -12,5 +12,7 @@ declare namespace NodeJS {
     EXPO_PUBLIC_TURNSTILE_SITE_KEY?: string
     /** Địa chỉ web, mặc định DEFAULT_SITE_URL (src/config/site.ts) */
     EXPO_PUBLIC_SITE_URL?: string
+    /** DSN của project Sentry mobile-novel-platform (không phải bí mật); bỏ trống thì không gửi lỗi */
+    EXPO_PUBLIC_SENTRY_DSN?: string
   }
 }

@@ -1,6 +1,7 @@
 import { router, Tabs } from 'expo-router'
 import { BookMarked, Compass, House, Search, UserRound } from 'lucide-react-native'
 import { Pressable } from 'react-native'
+import { FloatingTabBar } from '@/components/common/FloatingTabBar'
 import { OfflineBannerLayout } from '@/components/common/OfflineBanner'
 import { SiteLogo } from '@/components/common/SiteLogo'
 import { useLibraryUpdateCount } from '@/features/library/hooks'
@@ -15,15 +16,13 @@ export default function TabsLayout() {
     <Tabs
       // Mất mạng thì có dải báo ngay trên thanh tab, ở mọi tab
       screenLayout={({ children }) => <OfflineBannerLayout>{children}</OfflineBannerLayout>}
+      // Thanh tab dạng viên nổi có chuyển động (lấy title, tabBarIcon, tabBarBadge của từng tab)
+      tabBar={(props) => <FloatingTabBar {...props} />}
       screenOptions={{
         headerStyle: { backgroundColor: colors.background },
         headerShadowVisible: false,
         headerTintColor: colors.foreground,
         headerTitleStyle: { fontFamily: 'CormorantGaramond_700Bold', fontSize: 24 },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.mutedForeground,
-        tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
-        tabBarLabelStyle: { fontFamily: 'BeVietnamPro_500Medium', fontSize: 11 },
       }}
     >
       <Tabs.Screen
@@ -60,10 +59,6 @@ export default function TabsLayout() {
           title: 'Tủ truyện',
           // Số truyện đang theo dõi có chương mới (như nhãn neon của web)
           tabBarBadge: updates > 0 ? updates : undefined,
-          tabBarBadgeStyle: {
-            backgroundColor: colors.neon,
-            fontFamily: 'BeVietnamPro_600SemiBold',
-          },
           tabBarIcon: ({ color, size }) => <BookMarked color={color} size={size} />,
         }}
       />

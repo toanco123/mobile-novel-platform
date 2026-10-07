@@ -145,6 +145,7 @@ mobile-novel-platform/
 - Thông báo đẩy khi truyện theo dõi có chương mới: expo-notifications, bảng `push_tokens` + trigger/Edge Function gửi qua Expo Push (migration làm ở web theo skill `db-migration`).
 - Universal Links / App Links: `public/.well-known/apple-app-site-association` và `assetlinks.json` ở web.
 - Icon và splash thật (từ `favicon.svg` của web), EAS Build, TestFlight và Google Play Internal Testing.
+- Điểm danh hằng ngày ✅ (07/10/2026, nghiệp vụ và bản thiết kế ở `../web-novel-platform/documents/plan-diem-danh-va-de-cu.md`): nút lịch ở header trang chủ (chỉ khi đã đăng nhập, chấm neon khi chưa điểm danh) mở `BottomPanel` chứa `CheckInCard`; màn `rewards` "Phiếu đề cử" (mục ở tab Tài khoản) có lịch sử phiếu. Đề cử truyện chưa làm trên app (màn Phiếu đề cử ghi rõ "làm được trên web").
 - Theo dõi lỗi bằng Sentry ✅ code (07/10/2026, `plan-theo-doi-loi.md`): `ErrorBoundary` + báo lỗi JS, crash native; chờ DSN và `SENTRY_AUTH_TOKEN` trên EAS. Lên store thì khai báo dữ liệu chẩn đoán (Crash Data) ở App Privacy / Data safety.
 
 ## 6. Việc cần làm ngoài code app

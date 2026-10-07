@@ -12,6 +12,7 @@ import {
   Moon,
   PenLine,
   Shield,
+  Ticket,
   UserRound,
   UserRoundX,
 } from 'lucide-react-native'
@@ -53,6 +54,7 @@ export default function AccountScreen() {
       {user && (
         <MenuGroup title="Tài khoản">
           <MenuRow icon={UserRound} label="Hồ sơ" onPress={() => router.push('/account/profile')} />
+          <MenuRow icon={Ticket} label="Phiếu đề cử" onPress={() => router.push('/rewards')} />
           {user.provider === 'email' && (
             <MenuRow
               icon={KeyRound}

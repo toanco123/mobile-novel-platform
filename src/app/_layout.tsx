@@ -113,6 +113,7 @@ export default function RootLayout() {
             <Stack.Screen name="genres/[slug]" options={{ headerShown: true, title: '' }} />
             <Stack.Screen name="list/[type]" options={{ headerShown: true, title: '' }} />
             <Stack.Screen name="ranking" options={{ headerShown: true, title: '' }} />
+            <Stack.Screen name="rewards" options={{ headerShown: true, title: 'Phiếu đề cử' }} />
             <Stack.Screen name="search" />
             <Stack.Screen name="contact" options={{ headerShown: true, title: '' }} />
             <Stack.Screen name="+not-found" options={{ headerShown: true, title: '' }} />

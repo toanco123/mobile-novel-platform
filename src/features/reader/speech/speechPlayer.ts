@@ -1,39 +1,32 @@
-// Nghe truyện (useChapterSpeech của web) trên expo-speech. Khác web: bộ phát dùng chung cả app (store
-// Zustand + hàm ở module) thay vì hook của trang đọc, vì mỗi chương của app là một màn riêng: chuyển
-// chương thì màn cũ bị bỏ mà giọng đọc vẫn phải đọc tiếp. Màn đọc đăng ký cách sang chương sau
-// (setSpeechAdvance) và giữ / nhả bộ phát (claimSpeech / releaseSpeech) để rời hẳn trang đọc thì dừng.
-import * as Speech from 'expo-speech'
+// Nghe truyện (useChapterSpeech của web): lõi `session.ts` chép từ web, đọc bằng giọng của máy
+// (expo-speech) hoặc Giọng AI (expo-audio). Khác web: bộ phát dùng chung cả app (store Zustand + hàm ở
+// module) thay vì hook của trang đọc, vì mỗi chương của app là một màn riêng: chuyển chương thì màn cũ
+// bị bỏ mà giọng đọc vẫn phải đọc tiếp. Màn đọc đăng ký cách sang chương sau (setSpeechAdvance) và giữ
+// / nhả bộ phát (claimSpeech / releaseSpeech) để rời hẳn trang đọc thì dừng.
+import { toast } from 'sonner-native'
 import { create } from 'zustand'
+import { authKeys } from '@/features/auth/hooks'
 import { chapterQuery } from '@/features/chapters/hooks'
 import { blockTexts, parseContent } from '@/features/chapters/richText'
+import { fetchClips, TtsError, ttsFallbackMessage } from '@/features/tts/api'
+import { SITE_NAME } from '@/config/site'
+import { reportError } from '@/lib/monitoring'
 import { queryClient } from '@/lib/queryClient'
-import { splitForSpeech } from './splitForSpeech'
+import { isTtsVoice } from '@/lib/ttsVoices'
+import { createClipQueue } from './clipQueue'
+import { createCloudEngine } from './cloudEngine'
+import { createDeviceEngine } from './deviceEngine'
+import { createSpeechSession, IDLE_SPEECH, type SpeechState } from './session'
 import { useSpeechSettings } from './useSpeechSettings'
 import { pickVoice, voicesQuery } from './voices'
 
-export type SpeechStatus = 'idle' | 'playing' | 'paused'
+export type { SpeechState, SpeechStatus } from './session'
 
-export type SpeechState = {
-  status: SpeechStatus
-  slug: string | null
-  /** Chương đang đọc */
-  chapter: number | null
-  /** Chỉ số đoạn đang đọc trong chương (cùng cách đánh số đơn vị đọc của ChapterArticle) */
-  paragraph: number
-  /** Tổng số đoạn của chương đang đọc (0 khi chưa tải xong) */
-  total: number
-}
+export const useSpeechPlayer = create<SpeechState>()(() => IDLE_SPEECH)
 
-const IDLE: SpeechState = { status: 'idle', slug: null, chapter: null, paragraph: 0, total: 0 }
-
-export const useSpeechPlayer = create<SpeechState>()(() => IDLE)
-
-const set = (patch: Partial<SpeechState>) => useSpeechPlayer.setState(patch)
-
-// Mã lượt phát: mỗi lần phát/dừng tăng lên, callback của lượt cũ tự bỏ qua
-let run = 0
-// Sau stop() đôi khi câu nói kế tiếp bị bỏ qua; chờ một nhịp trước khi đọc (như web)
-const AFTER_STOP_MS = 60
+/** Giọng AI dùng được: đã đăng nhập và đang chọn một giọng AI */
+export const aiVoiceReady = () =>
+  !!queryClient.getQueryData(authKeys.session) && isTtsVoice(useSpeechSettings.getState().aiVoice)
 
 let advance: ((slug: string, next: number) => void) | null = null
 /** Màn đọc đăng ký cách mở chương sau khi giọng đọc tự chuyển chương */
@@ -41,99 +34,75 @@ export const setSpeechAdvance = (fn: typeof advance) => {
   advance = fn
 }
 
-async function play(slug: string, chapter: number, from: number) {
-  const id = ++run
-  void Speech.stop()
-  const s = useSpeechPlayer.getState()
-  // Sang chương khác thì chưa biết số đoạn (thanh điều khiển hiện "đang chuẩn bị")
-  set({
-    status: 'playing',
-    slug,
-    chapter,
-    paragraph: from,
-    total: s.slug === slug && s.chapter === chapter ? s.total : 0,
-  })
-  const [data, voices] = await Promise.all([
-    queryClient.fetchQuery(chapterQuery(queryClient, slug, chapter)).catch(() => null),
-    queryClient.fetchQuery(voicesQuery).catch(() => []),
-    new Promise((r) => setTimeout(r, AFTER_STOP_MS)),
-  ])
-  if (id !== run) return
-  if (!data) {
-    set(IDLE)
-    return
-  }
-  // Mỗi đoạn, tiêu đề, mục danh sách là một đơn vị đọc, khớp với số đoạn của ChapterArticle
-  const paragraphs = blockTexts(parseContent(data.content))
+// Tên truyện / chương của các chương đã tải, cho màn hình khóa
+const titles = new Map<string, { story: string; chapter: string }>()
+let currentSlug: string | null = null
 
-  const speakParagraph = (i: number) => {
-    if (id !== run) return
-    if (i >= paragraphs.length) {
-      if (useSpeechSettings.getState().autoNext && data.next) {
-        advance?.(slug, data.next.number)
-        void play(slug, data.next.number, 0)
-      } else {
-        set(IDLE)
-      }
-      return
-    }
-    set({ status: 'playing', slug, chapter, paragraph: i, total: paragraphs.length })
-    const chunks = splitForSpeech(paragraphs[i])
-    // Bắt đầu từ đầu chương thì đọc tên chương trước
-    if (i === 0 && from === 0) chunks.unshift(`Chương ${data.number}. ${data.title}.`)
-    let k = 0
-    const speakNext = () => {
-      if (id !== run) return
-      if (k >= chunks.length) return speakParagraph(i + 1)
-      const { rate, voiceURI } = useSpeechSettings.getState()
-      const voice = pickVoice(voices, voiceURI)
-      Speech.speak(chunks[k++], {
-        language: voice?.language ?? 'vi-VN',
-        voice: voice?.identifier,
-        rate,
-        onDone: speakNext,
-        // Lỗi một câu thì bỏ câu đó, đọc câu sau
-        onError: speakNext,
-      })
-    }
-    speakNext()
-  }
-  speakParagraph(from)
-}
+const settings = () => useSpeechSettings.getState()
+const voices = () => queryClient.getQueryData(voicesQuery.queryKey) ?? []
 
-function halt() {
-  run++
-  void Speech.stop()
-}
+const ai = createCloudEngine({
+  queue: createClipQueue({ fetchClips, error: (code) => new TtsError(code) }),
+  voice: () => settings().aiVoice,
+  rate: () => settings().rate,
+  autoNext: () => settings().autoNext,
+  error: (code) => new TtsError(code),
+  nowPlaying: (chapter) => {
+    const t = titles.get(`${currentSlug}|${chapter}`)
+    return { title: t?.chapter ?? `Chương ${chapter}`, artist: t?.story ?? SITE_NAME }
+  },
+})
+
+const session = createSpeechSession({
+  loadChapter: async (slug, chapter) => {
+    currentSlug = slug
+    const [data] = await Promise.all([
+      queryClient.fetchQuery(chapterQuery(queryClient, slug, chapter)).catch(() => null),
+      // Giọng của máy cần danh sách giọng (lấy một lần, giữ trong cache)
+      queryClient.fetchQuery(voicesQuery).catch(() => []),
+    ])
+    if (!data) return null
+    titles.set(`${slug}|${chapter}`, {
+      story: data.story.title,
+      chapter: `Chương ${data.number}. ${data.title}`,
+    })
+    return {
+      number: data.number,
+      title: data.title,
+      // Mỗi đoạn, tiêu đề, mục danh sách là một đơn vị đọc, khớp với số đoạn của ChapterArticle
+      paragraphs: blockTexts(parseContent(data.content)),
+      next: data.next?.number ?? null,
+    }
+  },
+  device: createDeviceEngine(() => ({
+    rate: settings().rate,
+    voice: pickVoice(voices(), settings().voiceURI),
+  })),
+  ai,
+  useAi: aiVoiceReady,
+  autoNext: () => settings().autoNext,
+  onState: (state) => {
+    useSpeechPlayer.setState(state)
+    if (state.status === 'idle') ai.release()
+  },
+  onAdvance: (slug, next) => advance?.(slug, next),
+  onFallback: (error, continued) => {
+    reportError(error)
+    toast(ttsFallbackMessage(error, continued))
+  },
+})
 
 export const speech = {
-  start: (slug: string, chapter: number, paragraph = 0) => void play(slug, chapter, paragraph),
-  /** Như web: tạm dừng = dừng hẳn và nhớ đoạn đang đọc */
-  pause: () => {
-    halt()
-    set({ status: 'paused' })
-  },
-  resume: () => {
-    const { slug, chapter, paragraph } = useSpeechPlayer.getState()
-    if (slug !== null && chapter !== null) void play(slug, chapter, paragraph)
-  },
-  stop: () => {
-    halt()
-    set(IDLE)
-  },
+  start: (slug: string, chapter: number, paragraph = 0) => session.start(slug, chapter, paragraph),
+  /** Giọng của máy: tạm dừng = dừng hẳn và nhớ đoạn đang đọc (như web); Giọng AI dừng tại chỗ */
+  pause: () => session.pause(),
+  resume: () => session.resume(),
+  stop: () => session.stop(),
   /** Nhảy tới đoạn trước (-1) / sau (+1) */
-  skip: (delta: number) => {
-    const { slug, chapter, paragraph, total } = useSpeechPlayer.getState()
-    if (slug === null || chapter === null) return
-    const last = Math.max(0, total - 1)
-    void play(slug, chapter, Math.min(last, Math.max(0, paragraph + delta)))
-  },
+  skip: (delta: number) => session.skip(delta),
   setRate: (rate: number) => {
     useSpeechSettings.getState().update({ rate })
-    // Đang đọc thì đọc lại đoạn hiện tại với tốc độ mới
-    const { status, slug, chapter, paragraph } = useSpeechPlayer.getState()
-    if (status === 'playing' && slug !== null && chapter !== null)
-      void play(slug, chapter, paragraph)
+    session.setRate(rate)
   },
 }
 

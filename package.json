@@ -1,7 +1,7 @@
 {
   "name": "mobile-novel-platform",
   "main": "expo-router/entry",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "private": true,
   "scripts": {
     "start": "expo start",
@@ -30,6 +30,7 @@
     "domhandler": "^6.0.1",
     "expo": "~57.0.26",
     "expo-apple-authentication": "~57.0.2",
+    "expo-audio": "~57.0.5",
     "expo-auth-session": "~57.0.13",
     "expo-brightness": "~57.0.2",
     "expo-constants": "~57.0.20",

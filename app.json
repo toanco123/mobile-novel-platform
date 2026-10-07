@@ -51,6 +51,13 @@
           "project": "mobile-novel-platform",
           "url": "https://sentry.io/"
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "enableBackgroundPlayback": true
+        }
       ]
     ],
     "experiments": {

@@ -1,15 +1,20 @@
 import { Minus, Plus, RotateCcw } from 'lucide-react-native'
-import type { ReactNode } from 'react'
-import { Pressable, ScrollView, Switch, View } from 'react-native'
+import { router } from 'expo-router'
+import { type ReactNode, useState } from 'react'
+import { Platform, Pressable, ScrollView, Switch, View } from 'react-native'
 import { ScopedTheme } from 'uniwind'
 import { ChoiceList } from '@/components/common/ChoiceList'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
+import { TextLink } from '@/components/ui/text-link'
+import { useSession } from '@/features/auth/hooks'
 import { useTheme } from '@/hooks/useTheme'
 import { useThemeColors } from '@/hooks/useThemeColors'
+import { findTtsVoice, TTS_VOICES } from '@/lib/ttsVoices'
 import { cn } from '@/lib/utils'
 import { fonts, toneTheme, tones } from '../readerOptions'
 import { useSpeechSettings } from '../speech/useSpeechSettings'
+import { voiceTips } from '../speech/voiceTips'
 import { pickVoice, useVoices } from '../speech/voices'
 import {
   FONT_SIZE_RANGE,
@@ -173,32 +178,47 @@ export function ReaderSettingsPanel() {
 }
 
 /**
- * Như SpeechSettings của web: giọng đọc và tự chuyển chương cho nghe truyện. Chỉ liệt kê giọng tiếng
- * Việt (giọng ngôn ngữ khác đọc sai dấu); máy chưa có thì báo cách cài.
+ * Như SpeechSettings của web: Giọng AI (cần đăng nhập) hoặc giọng tiếng Việt của máy (giọng ngôn ngữ
+ * khác đọc sai dấu), tự chuyển chương, gợi ý cài giọng của máy hay hơn.
  */
 function SpeechSettings() {
-  const { voiceURI, autoNext, update } = useSpeechSettings()
+  const { voiceURI, aiVoice, autoNext, update } = useSpeechSettings()
   const { vietnamese } = useVoices()
-  const current = pickVoice(vietnamese, voiceURI)
+  const { data: user } = useSession()
+  const device = pickVoice(vietnamese, voiceURI)
+  const ai = user ? findTtsVoice(aiVoice) : null
   const colors = useThemeColors()
+  const options = [
+    ...(user ? TTS_VOICES.map((v) => ({ value: `ai:${v.id}`, label: `${v.label} (AI)` })) : []),
+    ...vietnamese.map((v) => ({ value: `device:${v.identifier}`, label: v.name })),
+  ]
+  const value = ai ? `ai:${ai.id}` : device ? `device:${device.identifier}` : ''
+  const choose = (v: string) =>
+    v.startsWith('ai:')
+      ? update({ aiVoice: v.slice(3) })
+      : update({ aiVoice: null, voiceURI: v.slice('device:'.length) })
 
   return (
     <Group label="Nghe truyện">
       <View className="gap-3">
-        {vietnamese.length > 1 && current && (
-          <ChoiceList
-            label="Giọng đọc"
-            options={vietnamese.map((v) => ({ value: v.identifier, label: v.name }))}
-            value={current.identifier}
-            onChange={(id) => update({ voiceURI: id })}
-          />
+        {options.length > 1 && (
+          <ChoiceList label="Giọng đọc" options={options} value={value} onChange={choose} />
         )}
-        {vietnamese.length === 0 && (
+        {!user && (
+          <Text className="text-xs text-muted-foreground">
+            <TextLink className="text-xs" onPress={() => router.push('/login')}>
+              Đăng nhập
+            </TextLink>{' '}
+            để nghe bằng Giọng AI đọc tự nhiên.
+          </Text>
+        )}
+        {!ai && vietnamese.length === 0 && (
           <Text className="text-xs text-muted-foreground">
             Máy bạn chưa có giọng tiếng Việt nên có thể đọc sai dấu. Cài thêm giọng tiếng Việt trong
             Cài đặt → Trợ năng → Nội dung được đọc → Giọng nói của máy để nghe rõ hơn.
           </Text>
         )}
+        {!ai && <VoiceTips />}
         <View className="flex-row items-center justify-between gap-3">
           <Text className="flex-1 text-sm">Hết chương tự đọc tiếp chương sau</Text>
           <Switch
@@ -210,6 +230,31 @@ function SpeechSettings() {
         </View>
       </View>
     </Group>
+  )
+}
+
+/** Gợi ý cài giọng của máy hay hơn (thu gọn sẵn, như thẻ details của web) */
+function VoiceTips() {
+  const [open, setOpen] = useState(false)
+  return (
+    <View>
+      <Pressable
+        role="button"
+        aria-expanded={open}
+        onPress={() => setOpen((o) => !o)}
+        className="self-start active:opacity-70"
+      >
+        <Text className="text-xs text-muted-foreground underline">
+          Cách có giọng của máy hay hơn
+        </Text>
+      </Pressable>
+      {open &&
+        voiceTips(Platform.OS).map((tip) => (
+          <Text key={tip} className="mt-1.5 text-xs text-muted-foreground">
+            • {tip}
+          </Text>
+        ))}
+    </View>
   )
 }
 

@@ -1,5 +1,5 @@
 // Font của hệ thiết kế (như web): Be Vietnam Pro (chữ giao diện), Cormorant Garamond (tiêu đề),
-// Great Vibes (logo), Literata (chữ đọc truyện). Import từng độ đậm để không đóng gói cả họ chữ.
+// Literata (chữ đọc truyện). Import từng độ đậm để không đóng gói cả họ chữ.
 // Tên khóa là tên họ chữ dùng trong src/global.css (--font-*).
 import { BeVietnamPro_400Regular } from '@expo-google-fonts/be-vietnam-pro/400Regular'
 import { BeVietnamPro_400Regular_Italic } from '@expo-google-fonts/be-vietnam-pro/400Regular_Italic'
@@ -10,7 +10,6 @@ import { BeVietnamPro_700Bold } from '@expo-google-fonts/be-vietnam-pro/700Bold'
 import { CormorantGaramond_600SemiBold } from '@expo-google-fonts/cormorant-garamond/600SemiBold'
 import { CormorantGaramond_600SemiBold_Italic } from '@expo-google-fonts/cormorant-garamond/600SemiBold_Italic'
 import { CormorantGaramond_700Bold } from '@expo-google-fonts/cormorant-garamond/700Bold'
-import { GreatVibes_400Regular } from '@expo-google-fonts/great-vibes/400Regular'
 import { Literata_400Regular } from '@expo-google-fonts/literata/400Regular'
 import { Literata_400Regular_Italic } from '@expo-google-fonts/literata/400Regular_Italic'
 import { Literata_700Bold } from '@expo-google-fonts/literata/700Bold'
@@ -26,7 +25,6 @@ export const fonts = {
   CormorantGaramond_600SemiBold,
   CormorantGaramond_600SemiBold_Italic,
   CormorantGaramond_700Bold,
-  GreatVibes_400Regular,
   Literata_400Regular,
   Literata_400Regular_Italic,
   Literata_700Bold,

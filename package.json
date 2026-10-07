@@ -1,7 +1,7 @@
 {
   "name": "mobile-novel-platform",
   "main": "expo-router/entry",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "private": true,
   "scripts": {
     "start": "expo start",
@@ -18,7 +18,6 @@
   "dependencies": {
     "@expo-google-fonts/be-vietnam-pro": "^0.4.1",
     "@expo-google-fonts/cormorant-garamond": "^0.4.1",
-    "@expo-google-fonts/great-vibes": "^0.4.1",
     "@expo-google-fonts/literata": "^0.4.3",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@hookform/resolvers": "^5.9.1",

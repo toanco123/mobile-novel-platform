@@ -2,7 +2,7 @@ import { router, Tabs } from 'expo-router'
 import { BookMarked, Compass, House, Search, UserRound } from 'lucide-react-native'
 import { Pressable } from 'react-native'
 import { OfflineBannerLayout } from '@/components/common/OfflineBanner'
-import { SITE_NAME } from '@/config/site'
+import { SiteLogo } from '@/components/common/SiteLogo'
 import { useLibraryUpdateCount } from '@/features/library/hooks'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { links } from '@/lib/links'
@@ -30,13 +30,8 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Trang chủ',
-          // Header trang chủ là logo: tên web bằng font chữ ký, màu neon như web
-          headerTitle: SITE_NAME,
-          headerTitleStyle: {
-            fontFamily: 'GreatVibes_400Regular',
-            fontSize: 30,
-            color: colors.neon,
-          },
+          // Header trang chủ là logo như web
+          headerTitle: () => <SiteLogo />,
           tabBarIcon: ({ color, size }) => <House color={color} size={size} />,
           // Nút tìm kiếm như ô tìm ở header của web
           headerRight: () => (

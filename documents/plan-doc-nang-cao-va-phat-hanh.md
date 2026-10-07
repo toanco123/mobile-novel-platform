@@ -9,7 +9,7 @@ Bước 5 của `plan-app-di-dong.md`, chia nhỏ (02/10/2026):
 | **5b** | Cuộn liên tục (hết chương thì nối chương sau) | ✅ (02/10/2026) |
 | **5c** | Thông báo chương mới (expo-notifications, bảng `push_tokens` + gửi qua Expo Push, migration ở web): hỏi người dùng trước | ✅ code (02/10/2026); chờ tài khoản Expo / Apple / Firebase để gửi thật |
 | **5d** | Icon, splash, Universal Links / App Links, EAS Build, TestFlight, Google Play: cần tài khoản nhà phát triển, chốt bundle id | chưa làm |
-| **5e** | Bù chỗ còn chênh với web, không cần tài khoản: dải báo mất mạng, màn 404, chia sẻ truyện / chương | ✅ (07/10/2026, chưa kiểm trên máy ảo) |
+| **5e** | Bù chỗ còn chênh với web, không cần tài khoản: dải báo mất mạng, màn 404, chia sẻ truyện / chương | ✅ (07/10/2026, chạy thử một phần trên máy ảo) |
 
 Bước 4 ghi nhận thêm: nhánh `user-blocks` của web đã gộp vào `main` (`0d80654`, 02/10/2026).
 
@@ -62,4 +62,5 @@ Rà lại app so với web (07/10/2026): mọi trang người đọc đã có m�
 - **Dải báo mất mạng** (`components/common/OfflineBanner.tsx`, như `OfflineBanner` của web): "Bạn đang offline. Xem truyện đã lưu". Web đặt dưới header; app đặt dưới cùng thân màn bằng `screenLayout` của navigator để không đụng header: `Tabs` (ngay trên thanh tab) và `Stack` gốc (sát mép dưới, chừa thanh home). Không hiện ở nhóm tab trong `Stack` gốc (tab tự có), `(auth)` và trang đọc (`NO_OFFLINE_BANNER` ở `src/app/_layout.tsx`). `links.savedChapters` dùng chung với `NotSavedNotice`.
 - **Màn 404** (`src/app/+not-found.tsx`, như `NotFound` của web): link mở vào app mà app không có màn (Sáng tác, Quản trị, link cũ) thì có "Về trang chủ" và "Mở trên web" (mở đúng đường dẫn đó). Cần khi bật Universal Links ở 5d.
 - **Chia sẻ** (riêng của app, web không có): `shareLink` (`lib/share.ts`) mở bảng chia sẻ của máy với link web (`SITE_URL` + `paths`). Nút ở header chi tiết truyện (`ShareButton`) và "Chia sẻ chương" ở cuối chương (`ChapterEnd`; thanh công cụ đọc không còn chỗ).
-- Kiểm: typecheck, lint, 73 test, đóng gói iOS. Chưa kiểm trên máy ảo (bật / tắt mạng của máy ảo để xem dải, mở `webtruyen://studio` để xem màn 404).
+- Kiểm: typecheck, lint, 73 test, đóng gói iOS. 
+- Chạy thử trên máy ảo (07/10/2026, iPhone 17 Pro, theme tối, chỉ bằng `simctl`: mở deep link + chụp màn hình, không bấm): màn 404 (`/studio/new-story`) đúng; trang chủ, Tủ truyện, Thể loại khi có mạng không có dải offline, bố cục không xô lệch sau khi bọc `screenLayout`. **Chưa kiểm:** dải offline (máy ảo dùng mạng của máy Mac, không tắt được bằng lệnh), nút chia sẻ và 5a (DB production hiện không có truyện công khai nào để mở trang truyện / trang đọc; tự cuộn, nghe truyện cần bấm).

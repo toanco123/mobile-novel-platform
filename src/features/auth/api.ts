@@ -7,6 +7,7 @@
 // Riêng của app: đăng nhập Apple (signInWithApple, appleSignInEnabled).
 import { isAuthApiError, type Session, type User as AuthUser } from '@supabase/supabase-js'
 import * as AppleAuthentication from 'expo-apple-authentication'
+import Constants, { ExecutionEnvironment } from 'expo-constants'
 import * as Crypto from 'expo-crypto'
 import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
@@ -292,7 +293,7 @@ export async function signInWithProvider(provider: SocialProvider): Promise<User
  * Đăng nhập Apple (riêng của app, chỉ iOS; App Store bắt buộc khi có đăng nhập Google/Facebook):
  * bảng của hệ thống trả id token, đổi lấy phiên bằng signInWithIdToken, không qua trình duyệt hay deep
  * link. null nếu người dùng đóng bảng. Supabase phải bật provider Apple với Client IDs là bundle id
- * của app (thử bằng Expo Go thì thêm host.exp.Exponent).
+ * của app.
  */
 export async function signInWithApple(): Promise<User | null> {
   // Apple ký bản băm của nonce vào id token, Supabase so với nonce gốc để token không dùng lại được
@@ -478,7 +479,12 @@ export const socialProviders: SocialProvider[] = parseSocialProviders(
   process.env.EXPO_PUBLIC_AUTH_PROVIDERS,
 )
 
-/** Nút Apple: chỉ trên iOS, khi đã bật provider Apple trên Supabase ("apple" trong EXPO_PUBLIC_AUTH_PROVIDERS) */
+/**
+ * Nút Apple: chỉ trên iOS, khi đã bật provider Apple trên Supabase ("apple" trong
+ * EXPO_PUBLIC_AUTH_PROVIDERS). Không có trong Expo Go: Expo Go thiếu nút gốc của Apple (hiện khung đỏ
+ * "Unimplemented component"), chỉ bản build riêng có.
+ */
 export const appleSignInEnabled =
   Platform.OS === 'ios' &&
+  Constants.executionEnvironment !== ExecutionEnvironment.StoreClient &&
   (process.env.EXPO_PUBLIC_AUTH_PROVIDERS ?? '').split(',').some((s) => s.trim() === 'apple')

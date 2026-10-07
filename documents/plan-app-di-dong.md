@@ -145,6 +145,7 @@ mobile-novel-platform/
 - Thông báo đẩy khi truyện theo dõi có chương mới: expo-notifications, bảng `push_tokens` + trigger/Edge Function gửi qua Expo Push (migration làm ở web theo skill `db-migration`).
 - Universal Links / App Links: `public/.well-known/apple-app-site-association` và `assetlinks.json` ở web.
 - Icon và splash thật (từ `favicon.svg` của web), EAS Build, TestFlight và Google Play Internal Testing.
+- Theo dõi lỗi bằng Sentry ✅ code (07/10/2026, `plan-theo-doi-loi.md`): `ErrorBoundary` + báo lỗi JS, crash native; chờ DSN và `SENTRY_AUTH_TOKEN` trên EAS. Lên store thì khai báo dữ liệu chẩn đoán (Crash Data) ở App Privacy / Data safety.
 
 ## 6. Việc cần làm ngoài code app
 - **Supabase → Authentication → URL Configuration → Redirect URLs:** thêm `webtruyen://**` (app thật) và `exp://**` (Expo Go khi phát triển). Thiếu thì link xác nhận email, đặt lại mật khẩu, đăng nhập Google không quay về app được.

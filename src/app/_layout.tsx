@@ -1,12 +1,13 @@
 import '@/global.css'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useFonts } from 'expo-font'
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router'
+import { DarkTheme, DefaultTheme, type ErrorBoundaryProps, Stack, ThemeProvider } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { StatusBar } from 'expo-status-bar'
 import { useEffect } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { Toaster } from 'sonner-native'
+import { AppErrorFallback } from '@/components/common/AppErrorFallback'
 import { OfflineBannerLayout } from '@/components/common/OfflineBanner'
 import { AuthSync } from '@/features/auth/components/AuthSync'
 import { OfflineSync } from '@/features/library/components/OfflineSync'
@@ -14,9 +15,17 @@ import { NotificationSync } from '@/features/notifications/NotificationSync'
 import { useTheme } from '@/hooks/useTheme'
 import { useThemeColors } from '@/hooks/useThemeColors'
 import { fonts } from '@/lib/fonts'
+import { initMonitoring } from '@/lib/monitoring'
 import { queryClient } from '@/lib/queryClient'
 
+// Khởi tạo Sentry sớm nhất có thể để bắt cả lỗi lúc mở app (chỉ bật ở bản không phải dev, có DSN)
+initMonitoring()
 SplashScreen.preventAutoHideAsync()
+
+/** Màn nào gặp lỗi lúc hiển thị thì hiện màn "Có lỗi xảy ra" (có nút thử lại) và gửi lỗi lên Sentry */
+export function ErrorBoundary(props: ErrorBoundaryProps) {
+  return <AppErrorFallback {...props} />
+}
 
 // Mở app thẳng từ deep link (link trong email) thì vẫn có thanh tab bên dưới màn đăng nhập
 export const unstable_settings = { anchor: '(tabs)' }

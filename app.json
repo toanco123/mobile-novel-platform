@@ -43,6 +43,14 @@
           "cameraPermission": false,
           "microphonePermission": false
         }
+      ],
+      [
+        "@sentry/react-native",
+        {
+          "organization": "hanoi-university-of-business-a",
+          "project": "mobile-novel-platform",
+          "url": "https://sentry.io/"
+        }
       ]
     ],
     "experiments": {

@@ -1,7 +1,7 @@
 {
   "name": "mobile-novel-platform",
   "main": "expo-router/entry",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "private": true,
   "scripts": {
     "start": "expo start",
@@ -22,6 +22,7 @@
     "@gorhom/bottom-sheet": "^5.2.14",
     "@hookform/resolvers": "^5.9.1",
     "@react-native-community/netinfo": "12.0.1",
+    "@sentry/react-native": "~7.11.0",
     "@shopify/flash-list": "2.0.2",
     "@supabase/supabase-js": "^2.117.2",
     "@tanstack/react-query": "^5.104.0",
